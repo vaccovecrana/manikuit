@@ -1,0 +1,16 @@
+{
+  "description": "A Bitcoin address.",
+  "type": "object",
+  "properties": {
+    "p2pKh": {
+      "description": "A P2PKH address.",
+      "type": "string",
+      "required": true
+    },
+    "privateKey": {
+      "description": "The private key encoded as base58check using wallet import format.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

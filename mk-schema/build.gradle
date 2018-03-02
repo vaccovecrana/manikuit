@@ -1,0 +1,24 @@
+buildscript {
+  dependencies { classpath 'org.jsonschema2pojo:jsonschema2pojo-gradle-plugin:0.5.1' }
+}
+
+apply plugin: 'java'
+apply plugin: 'jsonschema2pojo'
+
+dependencies {
+  compile "javax.validation:validation-api:${validationApi}"
+  compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVer}"
+}
+
+jsonSchema2Pojo {
+  dateTimeType = 'java.time.LocalDateTime'
+  generateBuilders = true
+  includeHashcodeAndEquals = false
+  includeToString = false
+  includeAdditionalProperties = true
+  includeJsr303Annotations = true
+  usePrimitives = true
+  useLongIntegers = true
+  targetPackage = 'io.vacco.mk.base'
+  annotationStyle = 'jackson2'
+}

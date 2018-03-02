@@ -1,0 +1,14 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "addresses": {
+      "items": {"type": "string"},
+      "type": "array"
+    },
+    "asm": {"type": "string"},
+    "hex": {"type": "string"},
+    "reqSigs": {"type": "integer"},
+    "type": {"type": "string"}
+  },
+  "type": "object"
+}

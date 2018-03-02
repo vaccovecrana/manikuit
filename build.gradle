@@ -1,0 +1,11 @@
+subprojects {
+  version 0.12
+  group 'io.vacco.manikuit'
+  repositories { jcenter() }
+  buildscript { repositories { jcenter() } }
+  ext {
+    slf4jVer = '1.7.25'
+    validationApi = '2.0.0.Final'
+    jacksonVer = '2.9.2'
+  }
+}

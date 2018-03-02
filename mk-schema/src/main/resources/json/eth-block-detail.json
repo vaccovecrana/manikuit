@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "description": "ETH block with transaction detail.",
+  "extends": {"$ref": "http-config.json"},
+  "properties": {
+    "transactions": {
+      "type": "array",
+      "items": {"$ref": "eth-tx.json"}
+    }
+  }
+}

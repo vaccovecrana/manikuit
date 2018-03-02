@@ -1,0 +1,30 @@
+{
+  "description": "Base RPC source connection parameters.",
+  "extends": {"$ref": "http-config.json"},
+  "properties": {
+    "confirmationThreshold": {
+      "description": "Number of required confirmations to consider a transaction as final.",
+      "type": "integer", "required": true
+    },
+    "blockScanLimit": {
+      "description": "Time limit amount to scan blocks for address/transaction metadata.",
+      "type": "integer", "required": true
+    },
+    "blockScanLimitUnit": {
+      "description": "Time limit unit type for address/transaction metadata block scanning as defined by {@link java.time.temporal.ChronoUnit}.",
+      "type": "string", "required": true
+    },
+    "blockCacheLimit": {
+      "description": "The time limit amount to keep cached copies of blocks and transactions.",
+      "type": "integer", "required": true
+    },
+    "blockCacheLimitUnit": {
+      "description": "Time limit unit type subset equivalent to {@link java.util.concurrent.TimeUnit} for keeping cached copies of blocks/transactions.",
+      "type": "string",
+      "enum": ["SECONDS", "MINUTES", "HOURS", "DAYS"],
+      "required": true
+    }
+  },
+  "additionalProperties": false,
+  "type": "object"
+}

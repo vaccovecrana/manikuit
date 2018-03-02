@@ -1,0 +1,19 @@
+plugins { id "org.jetbrains.kotlin.jvm" version "1.2.21" }
+apply plugin: 'jacoco'
+
+dependencies {
+  compile project(":mk-core")
+  compile "junit:junit:4.12"
+  compile "io.github.j8spec:j8spec:3.0.0"
+  compile "org.slf4j:slf4j-simple:${slf4jVer}"
+  compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVer}"
+}
+
+jacocoTestReport {
+  sourceDirectories = files(project.parent.subprojects.sourceSets.main.allSource.srcDirs)
+  classDirectories =  files(project.parent.subprojects.sourceSets.main.output)
+}
+
+test {
+  jacoco { includes = ['unit.*', 'io.vacco.*'] }
+}

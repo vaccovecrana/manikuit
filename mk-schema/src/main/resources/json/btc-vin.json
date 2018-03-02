@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "coinbase": {
+      "description": "The coinbase (similar to the hex field of a scriptSig) encoded as hex. Only present if this is a coinbase transaction.",
+      "type": "string"
+    },
+    "scriptSig": {"$ref": "btc-script-sig.json"},
+    "sequence": {"type": "integer"},
+    "txid": {"type": "string"},
+    "txinwitness": {
+      "description": "Added in Bitcoin Core 0.13.0 Hex-encoded witness data. Only for segregated witness transactions",
+      "items": {"type": "string"},
+      "type": "array"
+    },
+    "vout": {"type": "integer"}
+  },
+  "type": "object",
+  "javaType" : "io.vacco.mk.base.BtcVin"
+}

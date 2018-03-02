@@ -1,0 +1,19 @@
+{
+  "properties": {
+    "blockhash": {"type": "string"},
+    "blocktime": {"type": "integer"},
+    "confirmations": {"type": "integer"},
+    "hash": {"type": "string"},
+    "hex": {"type": "string"},
+    "locktime": {"type": "integer"},
+    "size": {"type": "integer"},
+    "time": {"type": "integer"},
+    "txid": {"type": "string"},
+    "version": {"type": "integer"},
+    "vin": {"items": {"$ref": "btc-vin.json"}, "type": "array"},
+    "vout": {"items": {"$ref": "btc-vout.json"}, "type": "array"},
+    "vsize": {"type": "integer"}
+  },
+  "additionalProperties": false,
+  "type": "object"
+}

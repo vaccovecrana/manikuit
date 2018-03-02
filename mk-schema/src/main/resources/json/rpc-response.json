@@ -1,0 +1,19 @@
+{
+  "description": "Core JSON RPC response structure.",
+  "properties": {
+    "jsonrpc": {"type": "number"},
+    "id": {
+      "description": "The value of id provided with the request. Has value {@code null} if the id field was omitted in the request.",
+      "type": "string"
+    },
+    "result": {
+      "description": "The RPC output whose type varies by call. Has value {@code null} if an error occurred.",
+      "additionalProperties": false,
+      "type": "any"
+    },
+    "error": {"$ref": "rpc-error.json"}
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "javaType" : "io.vacco.mk.base.RpcResponse"
+}

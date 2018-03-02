@@ -1,0 +1,13 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "n": {"type": "integer"},
+    "scriptPubKey": {"$ref": "btc-script-pub-key.json"},
+    "value": {
+      "description": "Number of satoshis to spend (encoded as decimal BTC :/). May be zero; the sum of all outputs may not exceed the sum of satoshis previously spent to the outpoints provided in the input section. ",
+      "type": "number"
+    }
+  },
+  "type": "object",
+  "javaType" : "io.vacco.mk.base.BtcVout"
+}

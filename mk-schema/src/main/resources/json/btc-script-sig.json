@@ -1,0 +1,8 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "asm": {"type": "string"},
+    "hex": {"type": "string"}
+  },
+  "type": "object"
+}
