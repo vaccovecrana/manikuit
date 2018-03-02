@@ -1,2 +1,3 @@
 # manikuit
-Manikuit - Cryptocurrency based payment gateway
+
+Cryptocurrency based payment gateway
