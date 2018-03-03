@@ -3,6 +3,8 @@ pipeline:
     image: "java:openjdk-8-jdk-alpine"
     commands:
       - ./gradlew clean assemble
+    volumes:
+      - /home/qnoa-build/drone-data:/var/lib/drone
     environment:
       - GRADLE_USER_HOME=/var/lib/drone/cache
   telegram:
