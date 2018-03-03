@@ -14,10 +14,9 @@ pipeline:
       - ./gradlew clean mk-core:bintrayUpload
     volumes:
       - /home/qnoa-build/drone-data:/var/lib/drone
+    secrets: [bintray_user, bintray_key]
     environment:
       - GRADLE_USER_HOME=/var/lib/drone/cache
-      - BINTRAY_USER=bintray_user
-      - BINTRAY_KEY=bintray_key
     when:
       event: tag
   telegram:
