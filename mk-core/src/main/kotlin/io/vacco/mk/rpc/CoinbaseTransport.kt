@@ -1,7 +1,6 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.*
-import javafx.util.Pair
 
 class CoinbaseTransport(private val config: CoinbaseConfig) : RpcTransport(config) {
 

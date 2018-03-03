@@ -15,12 +15,12 @@ class GethTransport(config: MkConfig,
   private val ethFactor = bd18(BigInteger.valueOf(10).pow(weiSize))
 
   override fun getLatestBlockNumber(): Long {
-    return decodeLong(rpcRequest(String::class.java, "eth_blockNumber").value)
+    return decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
   }
 
   override fun getBlock(height: Long): CgBlockSummary {
     val ethBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
-        "0x${java.lang.Long.toHexString(height)}", false).value
+        "0x${java.lang.Long.toHexString(height)}", false).second
     return CgBlockSummary(MkBlock(
         height = height, timeUtcSec = decodeLong(ethBlock.timestamp),
         hash = ethBlock.hash, type = MkExchangeRate.CryptoCurrency.ETH
@@ -29,7 +29,7 @@ class GethTransport(config: MkConfig,
 
   override fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail {
     val ethBlock = rpcRequest(EthBlockDetail::class.java, "eth_getBlockByNumber",
-        "0x${java.lang.Long.toHexString(summary.first.height)}", true).value
+        "0x${java.lang.Long.toHexString(summary.first.height)}", true).second
     val tx = ethBlock.transactions
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeWei(tx.value) != BigInteger.ZERO }
@@ -49,9 +49,9 @@ class GethTransport(config: MkConfig,
         .withSecretParts(SecretUtils.split(rawSecret, secretParts, secretRequired))
   }
 
-  private fun netVersion(): Int = rpcRequest(Int::class.java, "net_version").value
-  private fun protocolVersion(): Int = Integer.decode(rpcRequest(String::class.java, "eth_protocolVersion").value)
-  private fun newAccount(passphrase: String): String = rpcRequest(String::class.java, "personal_newAccount", passphrase).value
+  private fun netVersion(): Int = rpcRequest(Int::class.java, "net_version").second
+  private fun protocolVersion(): Int = Integer.decode(rpcRequest(String::class.java, "eth_protocolVersion").second)
+  private fun newAccount(passphrase: String): String = rpcRequest(String::class.java, "personal_newAccount", passphrase).second
 
   override fun getChainType(): MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.ETH
   private fun decodeLong(input: String): Long = java.lang.Long.decode(input)

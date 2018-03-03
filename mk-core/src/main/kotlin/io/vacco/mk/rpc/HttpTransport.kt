@@ -1,7 +1,6 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.HttpConfig
-import javafx.util.Pair
 import okhttp3.*
 import org.slf4j.*
 
@@ -58,7 +57,7 @@ open class HttpTransport(config: HttpConfig) {
   private fun resolve(path: String?, vararg parameters: QueryParam): HttpUrl {
     val b0 = rootUrl!!.newBuilder()
     if (path != null) { b0.addPathSegments(path) }
-    parameters.forEach { p -> b0.addQueryParameter(p.key, p.value.toString()) }
+    parameters.forEach { p -> b0.addQueryParameter(p.first, p.second.toString()) }
     return b0.build()
   }
 }

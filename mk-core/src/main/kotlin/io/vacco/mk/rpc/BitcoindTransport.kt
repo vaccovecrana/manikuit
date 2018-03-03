@@ -16,11 +16,11 @@ class BitcoindTransport(config: MkConfig,
   private val df: ThreadLocal<DecimalFormat> = ThreadLocal.withInitial { DecimalFormat("#0.00000000") }
 
   override fun getLatestBlockNumber(): Long {
-    return rpcRequest(Long::class.java, "getblockcount").value
+    return rpcRequest(Long::class.java, "getblockcount").second
   }
 
   override fun getBlock(height: Long): CgBlockSummary {
-    val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).value
+    val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
     val btcBlock = getBtcBlock(btcBlockHash)
     return Pair(
         MkBlock(height = height, timeUtcSec = btcBlock.time,
@@ -56,18 +56,18 @@ class BitcoindTransport(config: MkConfig,
   }
 
   private fun getNewAddress(): BtcAddress {
-    val address = rpcRequest(String::class.java, "getnewaddress").value
-    val privateKey = rpcRequest(String::class.java, "dumpprivkey", address).value
+    val address = rpcRequest(String::class.java, "getnewaddress").second
+    val privateKey = rpcRequest(String::class.java, "dumpprivkey", address).second
     return BtcAddress().withP2pKh(address).withPrivateKey(privateKey)
   }
 
   override fun getChainType(): MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.BTC
 
-  private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash).value
+  private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash).second
 
   private fun getTransaction(txId: String): BtcTx? {
     try {
-      return rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).value
+      return rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second
     } catch (e: Exception) { log.error(e.message) }
     return null
   }

@@ -2,7 +2,6 @@ package io.vacco.mk.rpc
 
 import com.fasterxml.jackson.databind.*
 import io.vacco.mk.base.*
-import javafx.util.Pair
 
 import java.io.IOException
 import java.util.Arrays
