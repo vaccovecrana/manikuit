@@ -1,5 +1,3 @@
-plugins { id "com.jfrog.bintray" version "1.8.0" }
-
 subprojects {
   version 0.12
   group 'io.vacco.manikuit'
@@ -19,27 +17,9 @@ subprojects {
 
   publishing {
     publications {
-      mavenJava(MavenPublication) {
+      mavenKotlin(MavenPublication) {
         from components.java
         artifact sourceJar { classifier "sources" }
-      }
-    }
-  }
-
-  bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
-    publications = ['mavenJava']
-    pkg {
-      repo = 'io-vacco-oss'
-      name = 'manikuit'
-      userOrg = 'vaccovecrana'
-      vcsUrl = 'https://github.com/vaccovecrana/manikuit.git'
-      labels = ['cryptocurrency', 'bitcoin', 'ethereum', 'monero', 'rpc', 'payment-gateway']
-      publicDownloadNumbers = true
-      version {
-        name = project.version
-        desc = 'Cryptocurrency based payment gateway'
       }
     }
   }

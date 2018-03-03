@@ -7,15 +7,21 @@ pipeline:
       - /home/qnoa-build/drone-data:/var/lib/drone
     environment:
       - GRADLE_USER_HOME=/var/lib/drone/cache
+  deploy:
+    image: "java:openjdk-8-jdk-alpine"
+    commands:
+      - ./gradlew clean mk-schema:bintrayUpload
+      - ./gradlew clean mk-core:bintrayUpload
+    volumes:
+      - /home/qnoa-build/drone-data:/var/lib/drone
+    environment:
+      - GRADLE_USER_HOME=/var/lib/drone/cache
+      - BINTRAY_USER=bintray_user
+      - BINTRAY_KEY=bintray_key
+    when:
+      event: tag
   telegram:
     image: appleboy/drone-telegram
     secrets: [telegram_token, telegram_to]
     when:
       status: [success, failure]
-
-#deploy:
-#    when:
-#      event: tag
-#       - BINTRAY_USER=bintray_user
-#       - BINTRAY_KEY=bintray_key
-# MEEEEPPP

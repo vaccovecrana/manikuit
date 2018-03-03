@@ -6,14 +6,13 @@ import io.vacco.mk.util.MurmurHash3
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
-import net.tribe7.reason.Check.*
 
 abstract class MkTransport(val config: MkConfig,
                            private val blockCache: MkBlockCache) : RpcTransport(config) {
 
   init {
-    isTrue(config.blockCacheLimit > 0)
-    isTrue(config.blockScanLimit > 0)
+    require(config.blockCacheLimit > 0)
+    require(config.blockScanLimit > 0)
     validTimeUnit(config.blockCacheLimitUnit)
     validChronoUnit(config.blockScanLimitUnit)
   }

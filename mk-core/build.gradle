@@ -1,8 +1,10 @@
-plugins { id "org.jetbrains.kotlin.jvm" version "1.2.30" }
+plugins {
+  id "org.jetbrains.kotlin.jvm" version "1.2.30"
+  id "com.jfrog.bintray" version "1.8.0"
+}
 
 dependencies {
   compile project(":mk-schema")
-  compile "net.tribe7.reason:reason-api:2.0.2"
   compile "com.squareup.okhttp3:okhttp:3.9.1"
   compile "org.mitre.secretsharing:secret-sharing-scheme:1.2.0"
 
@@ -10,4 +12,27 @@ dependencies {
   compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.30"
 
   compileOnly "org.slf4j:slf4j-api:${slf4jVer}"
+}
+
+// TODO remove this when https://github.com/bintray/gradle-bintray-plugin/issues/104 is resolved.
+bintray {
+  user = System.getenv('BINTRAY_USER')
+  key = System.getenv('BINTRAY_KEY')
+  publications = ['mavenKotlin']
+  pkg {
+    repo = 'io.vacco.manikuit'
+    name = project.name
+    userOrg = 'vaccovecrana'
+    licenses = ['Apache-2.0']
+    websiteUrl = 'https://github.com/vaccovecrana/manikuit'
+    issueTrackerUrl = 'https://github.com/vaccovecrana/manikuit/issues'
+    vcsUrl = 'https://github.com/vaccovecrana/manikuit.git'
+    labels = ['cryptocurrency', 'bitcoin', 'ethereum', 'monero', 'rpc', 'payment-gateway']
+    publicDownloadNumbers = true
+    version {
+      name = project.version
+      desc = 'Cryptocurrency based payment gateway.'
+      gpg { sign = true }
+    }
+  }
 }
