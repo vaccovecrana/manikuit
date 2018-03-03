@@ -1,0 +1,18 @@
+pipeline:
+  backendBuild:
+    image: "java:openjdk-8-jdk-alpine"
+    commands:
+      - ./api/gradlew clean assemble
+    environment:
+      - GRADLE_USER_HOME=/var/lib/drone/cache
+  telegram:
+    image: appleboy/drone-telegram
+    secrets: [telegram_token, telegram_to]
+    when:
+      status: [success, failure]
+
+#deploy:
+#    when:
+#      event: tag
+#       - BINTRAY_USER=bintray_user
+#       - BINTRAY_KEY=bintray_key

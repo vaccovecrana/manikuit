@@ -1,11 +1,48 @@
+plugins { id "com.jfrog.bintray" version "1.8.0" }
+
 subprojects {
   version 0.12
   group 'io.vacco.manikuit'
   repositories { jcenter() }
   buildscript { repositories { jcenter() } }
+
+  apply plugin: 'java'
+  apply plugin: 'maven-publish'
+
   ext {
     slf4jVer = '1.7.25'
     validationApi = '2.0.0.Final'
     jacksonVer = '2.9.2'
   }
+
+  task sourceJar(type: Jar, dependsOn: classes) { from sourceSets.main.allSource }
+
+  publishing {
+    publications {
+      mavenJava(MavenPublication) {
+        from components.java
+        artifact sourceJar { classifier "sources" }
+      }
+    }
+  }
+
+  bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['mavenJava']
+    pkg {
+      repo = 'io-vacco-oss'
+      name = 'manikuit'
+      userOrg = 'vaccovecrana'
+      vcsUrl = 'https://github.com/vaccovecrana/manikuit.git'
+      labels = ['cryptocurrency', 'bitcoin', 'ethereum', 'monero', 'rpc', 'payment-gateway']
+      publicDownloadNumbers = true
+      version {
+        name = project.version
+        desc = 'Cryptocurrency based payment gateway'
+      }
+    }
+  }
 }
+
+task wrapper(type: Wrapper) { gradleVersion = '4.5' }
