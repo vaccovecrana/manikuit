@@ -1,6 +1,8 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.*
+import io.vacco.mk.base.eth.*
+import io.vacco.mk.config.MkConfig
 import io.vacco.mk.util.SecretUtils
 import io.vacco.mk.storage.MkBlockCache
 import java.math.BigDecimal
@@ -13,6 +15,8 @@ class GethTransport(config: MkConfig,
   private val weiSize = 18
   private val roundHalfEven = RoundingMode.HALF_EVEN
   private val ethFactor = bd18(BigInteger.valueOf(10).pow(weiSize))
+
+  override fun getUrl(payment: MkPayment): String = payment.address
 
   override fun getLatestBlockNumber(): Long {
     return decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)

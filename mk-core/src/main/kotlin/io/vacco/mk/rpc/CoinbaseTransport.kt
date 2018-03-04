@@ -1,22 +1,26 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.*
+import io.vacco.mk.config.CoinbaseConfig
 
 class CoinbaseTransport(private val config: CoinbaseConfig) : RpcTransport(config) {
+
+  var currentRates: Collection<MkExchangeRate> = ArrayList()
 
   fun getExchangeRateFor(type: MkExchangeRate.CryptoCurrency,
                          fiatCurrency: String): MkExchangeRate? {
     requireNotNull(type) // TODO optimize this with caching.
     requireNotNull(fiatCurrency)
-    return load(type)
-        .filter { ex0 -> ex0.fiatCurrency == fiatCurrency }
-        .firstOrNull()
+    return currentRates
+        .filter { ex0 -> ex0.cryptoCurrency == type }
+        .firstOrNull { ex0 -> ex0.fiatCurrency == fiatCurrency }
   }
 
-  fun buildRates(): Collection<MkExchangeRate> {
-    return MkExchangeRate.CryptoCurrency.values()
+  fun update(): Collection<MkExchangeRate> {
+    currentRates = MkExchangeRate.CryptoCurrency.values()
         .filter { r0 -> r0 != MkExchangeRate.CryptoCurrency.UNKNOWN }
         .flatMap { r0 -> load(r0).asIterable() }
+    return currentRates
   }
 
   private fun load(cc0: MkExchangeRate.CryptoCurrency): Sequence<MkExchangeRate> {

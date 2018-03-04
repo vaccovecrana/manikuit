@@ -16,6 +16,5 @@
     "v": {"type": "string"},
     "r": {"type": "string"},
     "s": {"type": "string"}
-  },
-  "javaType" : "io.vacco.mk.base.EthTx"
+  }
 }

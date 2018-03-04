@@ -1,5 +1,5 @@
 subprojects {
-  version 0.14
+  version 0.15
   group 'io.vacco.manikuit'
   repositories { jcenter() }
   buildscript { repositories { jcenter() } }

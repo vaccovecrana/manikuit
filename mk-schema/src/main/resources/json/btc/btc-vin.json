@@ -15,6 +15,5 @@
     },
     "vout": {"type": "integer"}
   },
-  "type": "object",
-  "javaType" : "io.vacco.mk.base.BtcVin"
+  "type": "object"
 }

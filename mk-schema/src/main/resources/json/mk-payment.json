@@ -2,17 +2,17 @@
   "description": "core crypto gateway payment.",
   "additionalProperties": false,
   "properties": {
-    "type": {"$ref": "mk-schema-types.json#/cryptoCurrency"},
-    "address": {"$ref": "mk-schema-types.json#/cryptoAddress"},
+    "type": {"$ref": "schema-types.json#/cryptoCurrency"},
+    "address": {"$ref": "schema-types.json#/cryptoAddress"},
     "secretParts": {
       "description": "Shamir encoded parts for the address private components (key or passphrase at the moment).",
-      "items": {"$ref": "mk-schema-types.json#/mitreSecretPart"},
+      "items": {"$ref": "schema-types.json#/mitreSecretPart"},
       "type": "array", "uniqueItems": true
     },
-    "txId": {"$ref": "mk-schema-types.json#/txHash"},
-    "amount": {"$ref": "mk-schema-types.json#/encodedAmount"},
-    "status": {"$ref": "mk-schema-types.json#/paymentStatus"},
-    "confirmations": {"$ref": "mk-schema-types.json#/txConfirmationCount"}
+    "txId": {"$ref": "schema-types.json#/txHash"},
+    "amount": {"$ref": "schema-types.json#/encodedAmount"},
+    "status": {"$ref": "schema-types.json#/paymentStatus"},
+    "confirmations": {"$ref": "schema-types.json#/txConfirmationCount"}
   },
   "type": "object"
 }

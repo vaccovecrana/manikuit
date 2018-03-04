@@ -2,11 +2,11 @@ package io.vacco.mk.util
 
 import org.mitre.secretsharing.Part
 import org.mitre.secretsharing.Secrets
-import java.util.Random
+import java.security.SecureRandom
 
 object SecretUtils {
 
-  private val r = Random()
+  private val r = SecureRandom()
 
   fun split(secret: String, total: Int, required: Int): Set<String> {
     requireNotNull(secret)

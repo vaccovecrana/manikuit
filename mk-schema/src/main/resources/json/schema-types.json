@@ -11,12 +11,6 @@
     "type": "string",
     "minLength": 32, "maxLength": 128
   },
-  "cryptoBlockNumber": {
-    "id": "cryptoBlockNumber",
-    "description": "A non-negative integer block number.",
-    "type": "integer",
-    "minimum": 0
-  },
   "txConfirmationCount": {
     "id": "txConfirmationCount",
     "description": "a non-negative confirmation count.",
@@ -29,12 +23,6 @@
     "type": "string",
     "enum": ["pending", "complete"],
     "default": "pending"
-  },
-  "uri": {
-    "id": "uri",
-    "description": "Target rpc endpoint (http or https).",
-    "type": "string",
-    "required": true
   },
   "mitreSecretPart": {
     "id": "mitreSecretPart",

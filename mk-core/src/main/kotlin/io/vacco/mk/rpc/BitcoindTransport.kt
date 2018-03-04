@@ -1,12 +1,17 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.*
+import io.vacco.mk.base.btc.BtcAddress
+import io.vacco.mk.base.btc.BtcBlock
+import io.vacco.mk.base.btc.BtcTx
+import io.vacco.mk.base.btc.Vout
+import io.vacco.mk.config.MkConfig
 import io.vacco.mk.util.SecretUtils
 import io.vacco.mk.storage.MkBlockCache
 import org.slf4j.*
 import java.text.DecimalFormat
 
-typealias BtcOut = Pair<BtcTx, BtcVout>
+typealias BtcOut = Pair<BtcTx, Vout>
 typealias BtcAddrOut = Pair<BtcOut, String>
 
 class BitcoindTransport(config: MkConfig,
@@ -14,6 +19,8 @@ class BitcoindTransport(config: MkConfig,
 
   private val log: Logger = LoggerFactory.getLogger(javaClass)
   private val df: ThreadLocal<DecimalFormat> = ThreadLocal.withInitial { DecimalFormat("#0.00000000") }
+
+  override fun getUrl(payment: MkPayment): String = "bitcoin:${payment.address}?amount=${payment.amount}"
 
   override fun getLatestBlockNumber(): Long {
     return rpcRequest(Long::class.java, "getblockcount").second

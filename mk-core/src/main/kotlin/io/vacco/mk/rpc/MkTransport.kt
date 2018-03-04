@@ -1,6 +1,7 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.*
+import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
 import io.vacco.mk.util.MurmurHash3
 import java.time.*
@@ -13,8 +14,6 @@ abstract class MkTransport(val config: MkConfig,
   init {
     require(config.blockCacheLimit > 0)
     require(config.blockScanLimit > 0)
-    validTimeUnit(config.blockCacheLimitUnit)
-    validChronoUnit(config.blockScanLimitUnit)
   }
 
   abstract fun getLatestBlockNumber(): Long
@@ -22,6 +21,7 @@ abstract class MkTransport(val config: MkConfig,
   abstract fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail
   abstract fun getChainType(): MkExchangeRate.CryptoCurrency
   abstract fun create(rawSecret: String?, secretParts: Int, secretRequired: Int): MkPayment
+  abstract fun getUrl(payment: MkPayment): String
 
   fun update() {
     purgeCache()
@@ -61,12 +61,8 @@ abstract class MkTransport(val config: MkConfig,
     return currentBlockHeight - payment.blockHeight
   }
 
-  private fun validChronoUnit(cUnit: String) = ChronoUnit.valueOf(cUnit)
-
-  private fun validTimeUnit(cacheUnit: MkConfig.BlockCacheLimitUnit) = TimeUnit.valueOf(cacheUnit.toString())
-
   private fun blockScanCutOffSec(): Long =
-      nowUtcSecMinus(config.blockScanLimit, ChronoUnit.valueOf(config.blockScanLimitUnit))
+      nowUtcSecMinus(config.blockScanLimit, config.blockScanLimitUnit)
 
   private fun blockCacheCutOffSec(): Long =
       nowUtcSecMinus(config.blockCacheLimit, ChronoUnit.valueOf(config.blockCacheLimitUnit.toString()))

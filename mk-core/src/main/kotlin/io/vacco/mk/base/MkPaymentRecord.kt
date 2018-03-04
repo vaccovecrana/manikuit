@@ -9,7 +9,7 @@ import javax.validation.constraints.*
 data class MkPaymentRecord(
     @Attribute(nullable = false)
     @JsonPropertyDescription("A crypto currency type.")
-    var type: io.vacco.mk.base.MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.UNKNOWN,
+    var type: MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.UNKNOWN,
 
     @Index(loadFactor = 8)
     @Attribute(nullable = false)

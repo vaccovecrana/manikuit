@@ -8,6 +8,5 @@
       "type": "number"
     }
   },
-  "type": "object",
-  "javaType" : "io.vacco.mk.base.BtcVout"
+  "type": "object"
 }

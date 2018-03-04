@@ -4,9 +4,9 @@ import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory
 import com.onyx.persistence.manager.PersistenceManager
 import com.onyx.persistence.query.from
 import com.onyx.persistence.query.gte
-import io.vacco.mk.base.MkConfig
 import io.vacco.mk.base.MkExchangeRate
 import io.vacco.mk.base.MkPaymentRecord
+import io.vacco.mk.config.MkConfig
 import io.vacco.mk.rpc.GethTransport
 import io.vacco.mk.storage.MkBlockCache
 import j8spec.J8Spec
@@ -15,6 +15,7 @@ import j8spec.junit.J8SpecRunner
 import org.junit.Assert
 import org.junit.runner.RunWith
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 
 @DefinedOrder
 @RunWith(J8SpecRunner::class)
@@ -31,15 +32,10 @@ class GethTransportSpec {
     J8Spec.beforeAll {
       factory.initialize()
       manager = factory.persistenceManager
-      eth = GethTransport(
-          MkConfig().withRootUrl("http://127.0.0.1:8545")
-              .withConfirmationThreshold(12)
-              .withBlockCacheLimit(5)
-              .withBlockCacheLimitUnit(MkConfig.BlockCacheLimitUnit.SECONDS)
-              .withBlockScanLimit(1)
-              .withBlockScanLimitUnit("HOURS"),
-          MkBlockCache(manager!!)
-      )
+      val cfg = MkConfig(12,
+          1, ChronoUnit.HOURS, 5, TimeUnit.SECONDS)
+      cfg.rootUrl = "http://127.0.0.1:8545"
+      eth = GethTransport(cfg, MkBlockCache(manager!!))
     }
     J8Spec.it("Can update the ETH cache.") { eth!!.update() }
     J8Spec.it("Can find transactions recorded in the last 40 minutes.") {

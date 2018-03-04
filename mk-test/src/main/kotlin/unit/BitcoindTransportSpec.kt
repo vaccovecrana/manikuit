@@ -3,7 +3,6 @@ package unit
 import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory
 import com.onyx.persistence.manager.PersistenceManager
 import com.onyx.persistence.query.from
-import io.vacco.mk.base.MkConfig
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.rpc.BitcoindTransport
 import io.vacco.mk.storage.MkBlockCache
@@ -14,7 +13,9 @@ import org.junit.runner.RunWith
 import java.time.temporal.ChronoUnit
 import com.onyx.persistence.query.*
 import io.vacco.mk.base.MkExchangeRate
+import io.vacco.mk.config.MkConfig
 import org.junit.Assert.*
+import java.util.concurrent.TimeUnit
 
 @DefinedOrder
 @RunWith(J8SpecRunner::class)
@@ -31,16 +32,11 @@ class BitcoindTransportSpec {
     beforeAll {
       factory.initialize()
       manager = factory.persistenceManager
-      btc = BitcoindTransport(
-          MkConfig().withRootUrl("http://127.0.0.1:18332")
-              .withUsername("gopher").withPassword("omglol")
-              .withConfirmationThreshold(6)
-              .withBlockCacheLimit(5)
-              .withBlockCacheLimitUnit(MkConfig.BlockCacheLimitUnit.SECONDS)
-              .withBlockScanLimit(1)
-              .withBlockScanLimitUnit("HOURS"),
-          MkBlockCache(manager!!)
-      )
+      val cfg = MkConfig(6, 1, ChronoUnit.HOURS, 5, TimeUnit.SECONDS)
+      cfg.rootUrl = "http://127.0.0.1:18332"
+      cfg.username = "gopher"
+      cfg.password = "omglol"
+      btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
     }
     it("Can update the BTC cache.") { btc!!.update() }
     it("Can find transactions recorded in the last 40 minutes.") {

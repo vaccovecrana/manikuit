@@ -14,6 +14,5 @@
     "error": {"$ref": "rpc-error.json"}
   },
   "additionalProperties": false,
-  "type": "object",
-  "javaType" : "io.vacco.mk.base.RpcResponse"
+  "type": "object"
 }

@@ -1,6 +1,6 @@
 package io.vacco.mk.rpc
 
-import io.vacco.mk.base.HttpConfig
+import io.vacco.mk.config.HttpConfig
 import okhttp3.*
 import org.slf4j.*
 
@@ -14,15 +14,15 @@ open class HttpTransport(config: HttpConfig) {
 
   init {
     var bld = OkHttpClient.Builder()
-    if (config.username != null) {
-      if (config.password != null) {
+    if (config.username.isNotEmpty()) {
+      if (config.password.isNotEmpty()) {
         bld.authenticator { _, response ->
           val credential = Credentials.basic(config.username, config.password)
           response.request().newBuilder().header("Authorization", credential).build()
         }
       }
     }
-    if (config.isIgnoreSsl) { bld = bld.hostnameVerifier { _, _ -> true } }
+    if (config.ignoreSsl) { bld = bld.hostnameVerifier { _, _ -> true } }
     this.client = bld.build()
   }
 
