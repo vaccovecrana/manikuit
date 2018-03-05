@@ -4,11 +4,12 @@
   "properties": {
     "type": {"$ref": "schema-types.json#/cryptoCurrency"},
     "address": {"$ref": "schema-types.json#/cryptoAddress"},
-    "secretParts": {
-      "description": "Shamir encoded parts for the address private components (key or passphrase at the moment).",
-      "items": {"$ref": "schema-types.json#/mitreSecretPart"},
-      "type": "array", "uniqueItems": true
+    "cipherText": {
+      "description": "AES GCM implementation specific encoded address private components (key data/passphrase, etc.).",
+      "type": "string", "minLength": 16, "maxLength": 2048
     },
+    "iv": {"type": "string", "maxLength": 256},
+    "gcmKey": {"type": "string", "maxLength": 256},
     "txId": {"$ref": "schema-types.json#/txHash"},
     "amount": {"$ref": "schema-types.json#/encodedAmount"},
     "status": {"$ref": "schema-types.json#/paymentStatus"},

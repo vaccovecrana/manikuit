@@ -1,6 +1,6 @@
 {
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "blockHash": {"type": "string", "required": true},
     "blockNumber": {"type": "string", "required": true},

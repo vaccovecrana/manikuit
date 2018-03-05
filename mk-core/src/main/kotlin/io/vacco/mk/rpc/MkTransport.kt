@@ -3,13 +3,13 @@ package io.vacco.mk.rpc
 import io.vacco.mk.base.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
-import io.vacco.mk.util.MurmurHash3
+import io.vacco.mk.util.*
 import java.time.*
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.TimeUnit
+import java.util.*
 
-abstract class MkTransport(val config: MkConfig,
-                           private val blockCache: MkBlockCache) : RpcTransport(config) {
+abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlockCache):
+    MkCachingTransport(config) {
 
   init {
     require(config.blockCacheLimit > 0)
@@ -20,11 +20,32 @@ abstract class MkTransport(val config: MkConfig,
   abstract fun getBlock(height: Long): CgBlockSummary
   abstract fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail
   abstract fun getChainType(): MkExchangeRate.CryptoCurrency
-  abstract fun create(rawSecret: String?, secretParts: Int, secretRequired: Int): MkPayment
+  abstract fun doCreate(): Pair<MkPayment, String>
   abstract fun getUrl(payment: MkPayment): String
 
-  fun update() {
-    purgeCache()
+  fun create(): MkPayment {
+    val pData = doCreate()
+    val key = GcmCrypto.generateKey(256)
+    val encoded = GcmCrypto.encryptGcm(pData.second.toByteArray(), key)
+    return pData.first
+        .withCipherText(Base64.getEncoder().encodeToString(encoded.ciphertext))
+        .withIv(Base64.getEncoder().encodeToString(encoded.iv))
+        .withGcmKey(Base64.getEncoder().encodeToString(key))
+  }
+
+  fun decode(payment: MkPayment): String {
+    requireNotNull(payment.cipherText)
+    requireNotNull(payment.iv)
+    requireNotNull(payment.gcmKey)
+    val dec = Base64.getDecoder()
+    return String(GcmCrypto.decryptGcm(
+        Ciphertext(dec.decode(payment.cipherText),
+            dec.decode(payment.iv)), dec.decode(payment.gcmKey)),
+        Charsets.UTF_8)
+  }
+
+  override fun update() {
+    purge()
     val utcCoff = blockScanCutOffSec()
     val blockList: MutableList<CgBlockSummary> = mutableListOf()
     val loc0 = blockCache.getLatestLocalBlockFor(getChainType())
@@ -47,7 +68,7 @@ abstract class MkTransport(val config: MkConfig,
     }
   }
 
-  fun purgeCache() = blockCache.purge(blockCacheCutOffSec(), getChainType())
+  override fun purge() = blockCache.purge(blockCacheCutOffSec(), getChainType())
 
   fun getPaymentsFor(address: String, type: MkExchangeRate.CryptoCurrency): List<MkPaymentRecord> =
       blockCache.getPaymentsFor(address, type)

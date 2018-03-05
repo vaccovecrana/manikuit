@@ -3,14 +3,14 @@ package io.vacco.mk.rpc
 import io.vacco.mk.base.*
 import io.vacco.mk.base.eth.*
 import io.vacco.mk.config.MkConfig
-import io.vacco.mk.util.SecretUtils
 import io.vacco.mk.storage.MkBlockCache
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.util.*
 
-class GethTransport(config: MkConfig,
-                    blockCache: MkBlockCache): MkTransport(config, blockCache) {
+class ParityTransport(config: MkConfig,
+                      blockCache: MkBlockCache): MkTransport(config, blockCache) {
 
   private val weiSize = 18
   private val roundHalfEven = RoundingMode.HALF_EVEN
@@ -45,17 +45,20 @@ class GethTransport(config: MkConfig,
     return CgBlockDetail(summary.first, tx)
   }
 
-  override fun create(rawSecret: String?, secretParts: Int, secretRequired: Int): MkPayment {
-    val ethAddress = newAccount(rawSecret!!)
-    return MkPayment()
+  override fun doCreate(): Pair<MkPayment, String> {
+    val addressPassPhrase = UUID.randomUUID().toString()
+    val ethAddress = newAccount(addressPassPhrase)
+    val accountData = mapper.writeValueAsString(exportAccount(ethAddress, addressPassPhrase))
+    return Pair(MkPayment()
         .withType(MkExchangeRate.CryptoCurrency.ETH)
-        .withAddress(ethAddress)
-        .withSecretParts(SecretUtils.split(rawSecret, secretParts, secretRequired))
+        .withAddress(ethAddress), "$accountData::$addressPassPhrase")
   }
 
   private fun netVersion(): Int = rpcRequest(Int::class.java, "net_version").second
   private fun protocolVersion(): Int = Integer.decode(rpcRequest(String::class.java, "eth_protocolVersion").second)
   private fun newAccount(passphrase: String): String = rpcRequest(String::class.java, "personal_newAccount", passphrase).second
+  private fun exportAccount(address: String, passphrase: String): Map<*, *> = rpcRequest(
+      Map::class.java, "parity_exportAccount", address, passphrase).second
 
   override fun getChainType(): MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.ETH
   private fun decodeLong(input: String): Long = java.lang.Long.decode(input)

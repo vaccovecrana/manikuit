@@ -7,23 +7,27 @@ import com.onyx.persistence.query.gte
 import io.vacco.mk.base.MkExchangeRate
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.config.MkConfig
-import io.vacco.mk.rpc.GethTransport
+import io.vacco.mk.rpc.ParityTransport
 import io.vacco.mk.storage.MkBlockCache
 import j8spec.J8Spec
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
-import org.junit.Assert
+import org.junit.Assert.*
 import org.junit.runner.RunWith
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 @DefinedOrder
 @RunWith(J8SpecRunner::class)
-class GethTransportSpec {
+class ParityTransportSpec {
+
+  private val log:Logger = LoggerFactory.getLogger(this.javaClass)
 
   private val factory = EmbeddedPersistenceManagerFactory("/tmp/${this.javaClass.simpleName}")
   private var manager: PersistenceManager? = null
-  private var eth: GethTransport? = null
+  private var eth: ParityTransport? = null
   private val tx40Min: MutableList<MkPaymentRecord> = ArrayList()
   private val tx40MinWithStatus:MutableList<Pair<MkPaymentRecord, MkPaymentRecord.Status>> = ArrayList()
   private var testAddress: String? = null
@@ -35,7 +39,7 @@ class GethTransportSpec {
       val cfg = MkConfig(12,
           1, ChronoUnit.HOURS, 5, TimeUnit.SECONDS)
       cfg.rootUrl = "http://127.0.0.1:8545"
-      eth = GethTransport(cfg, MkBlockCache(manager!!))
+      eth = ParityTransport(cfg, MkBlockCache(manager!!))
     }
     J8Spec.it("Can update the ETH cache.") { eth!!.update() }
     J8Spec.it("Can find transactions recorded in the last 40 minutes.") {
@@ -43,7 +47,7 @@ class GethTransportSpec {
       val tx = manager!!.from(MkPaymentRecord::class)
           .where("timeUtcSec" gte utc15MinAgo)
           .list<MkPaymentRecord>()
-      Assert.assertTrue(tx.isNotEmpty())
+      assertTrue(tx.isNotEmpty())
       tx40Min.addAll(tx)
     }
     J8Spec.it("Can map all transactions to their corresponding status, according to the latest block height.") {
@@ -55,28 +59,30 @@ class GethTransportSpec {
         val blockDelta = eth!!.getBlockDelta(p0.first, blockNow)
         val confThreshold = eth!!.config.confirmationThreshold
         if (p0.second == MkPaymentRecord.Status.COMPLETE) {
-          Assert.assertTrue(blockDelta >= confThreshold)
+          assertTrue(blockDelta >= confThreshold)
         } else {
-          Assert.assertTrue(blockDelta < confThreshold)
+          assertTrue(blockDelta < confThreshold)
         }
       }
       testAddress = tx40Min[0].address
-      Assert.assertNotNull(testAddress)
+      assertNotNull(testAddress)
     }
     J8Spec.it("Can get all transactions for a particular address.") {
       val addrTx = eth!!.getPaymentsFor(testAddress!!, MkExchangeRate.CryptoCurrency.ETH)
-      Assert.assertTrue(addrTx.isNotEmpty())
+      assertTrue(addrTx.isNotEmpty())
     }
     J8Spec.it("Can purge the cache for records older than 5 seconds.") {
-      eth!!.purgeCache()
+      eth!!.purge()
       val tx = manager!!.from(MkPaymentRecord::class).list<MkPaymentRecord>()
-      Assert.assertTrue(tx.isEmpty())
+      assertTrue(tx.isEmpty())
     }
-    J8Spec.it("Can create a new payment, along with a backing account, using 2 of 3 secret shares.") {
-      val payment = eth!!.create("iamthegreatgopher", 3, 2)
-      Assert.assertNotNull(payment)
-      Assert.assertNotNull(payment.secretParts)
-      Assert.assertTrue(payment.secretParts.size == 3)
+    J8Spec.it("Can create a new payment, along with a backing account.") {
+      val payment = eth!!.create()
+      assertNotNull(payment)
+      assertNotNull(payment.gcmKey)
+      val keyData = eth!!.decode(payment)
+      assertNotNull(keyData)
+      log.info(keyData)
     }
   }
 }

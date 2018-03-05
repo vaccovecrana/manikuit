@@ -1,12 +1,10 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.*
-import io.vacco.mk.base.btc.BtcAddress
 import io.vacco.mk.base.btc.BtcBlock
 import io.vacco.mk.base.btc.BtcTx
 import io.vacco.mk.base.btc.Vout
 import io.vacco.mk.config.MkConfig
-import io.vacco.mk.util.SecretUtils
 import io.vacco.mk.storage.MkBlockCache
 import org.slf4j.*
 import java.text.DecimalFormat
@@ -54,18 +52,17 @@ class BitcoindTransport(config: MkConfig,
     return CgBlockDetail(summary.first, tx)
   }
 
-  override fun create(rawSecret: String?, secretParts: Int, secretRequired: Int): MkPayment {
+  override fun doCreate(): Pair<MkPayment, String> {
     val address = getNewAddress()
-    return MkPayment()
-        .withAddress(address.p2pKh)
-        .withType(MkExchangeRate.CryptoCurrency.BTC)
-        .withSecretParts(SecretUtils.split(address.privateKey, secretParts, secretRequired))
+    return Pair(MkPayment()
+        .withAddress(address.first)
+        .withType(MkExchangeRate.CryptoCurrency.BTC), address.second)
   }
 
-  private fun getNewAddress(): BtcAddress {
+  private fun getNewAddress(): Pair<String, String> {
     val address = rpcRequest(String::class.java, "getnewaddress").second
     val privateKey = rpcRequest(String::class.java, "dumpprivkey", address).second
-    return BtcAddress().withP2pKh(address).withPrivateKey(privateKey)
+    return Pair(address, privateKey)
   }
 
   override fun getChainType(): MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.BTC

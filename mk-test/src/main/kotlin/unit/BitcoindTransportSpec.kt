@@ -15,11 +15,15 @@ import com.onyx.persistence.query.*
 import io.vacco.mk.base.MkExchangeRate
 import io.vacco.mk.config.MkConfig
 import org.junit.Assert.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 @DefinedOrder
 @RunWith(J8SpecRunner::class)
 class BitcoindTransportSpec {
+
+  private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
   private val factory = EmbeddedPersistenceManagerFactory("/tmp/${this.javaClass.simpleName}")
   private var manager: PersistenceManager? = null
@@ -66,15 +70,19 @@ class BitcoindTransportSpec {
       assertTrue(addrTx.isNotEmpty())
     }
     it("Can purge the cache for records older than 5 seconds.") {
-      btc!!.purgeCache()
+      btc!!.purge()
       val tx = manager!!.from(MkPaymentRecord::class).list<MkPaymentRecord>()
       assertTrue(tx.isEmpty())
     }
-    it("Can create a new payment, along with a backing account, using 2 of 3 secret shares.") {
-      val payment = btc!!.create(null, 3, 2);
+    it("Can create a new payment, along with a backing account.") {
+      val payment = btc!!.create()
       assertNotNull(payment)
-      assertNotNull(payment.secretParts)
-      assertTrue(payment.secretParts.size == 3)
+      assertNotNull(payment.cipherText)
+      assertNotNull(payment.iv)
+      assertNotNull(payment.gcmKey)
+      val keyData = btc!!.decode(payment)
+      assertNotNull(keyData)
+      log.info(keyData)
     }
   }
 }

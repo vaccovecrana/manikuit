@@ -6,7 +6,6 @@ plugins {
 dependencies {
   compile project(":mk-schema")
   compile "com.squareup.okhttp3:okhttp:3.9.1"
-  compile "org.mitre.secretsharing:secret-sharing-scheme:1.2.0"
 
   compile "com.onyxdevtools:onyx-database:2.1.3"
   compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.30"

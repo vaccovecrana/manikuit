@@ -5,8 +5,7 @@ import unit.*
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
     PersistenceSpec::class,
-    SecretUtilsSpec::class,
     RpcTransportSpec::class,
     BitcoindTransportSpec::class,
-    GethTransportSpec::class
+    ParityTransportSpec::class
 ) class CombinedTestSuite

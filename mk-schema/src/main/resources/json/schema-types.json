@@ -24,12 +24,6 @@
     "enum": ["pending", "complete"],
     "default": "pending"
   },
-  "mitreSecretPart": {
-    "id": "mitreSecretPart",
-    "description": "MITRE Corporation encoding of Shamir's Secret Sharing Scheme part.",
-    "type": "string",
-    "minLength": 124, "maxLength": 128
-  },
   "txHash": {
     "id": "txHash",
     "description": "A transaction hash.",
