@@ -16,7 +16,7 @@ class ParityTransport(config: MkConfig,
   private val roundHalfEven = RoundingMode.HALF_EVEN
   private val ethFactor = bd18(BigInteger.valueOf(10).pow(weiSize))
 
-  override fun getUrl(payment: MkAccount): String = payment.address
+  override fun getUrl(account: MkAccount): String = account.address
 
   override fun getLatestBlockNumber(): Long {
     return decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)

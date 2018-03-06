@@ -18,7 +18,7 @@ class BitcoindTransport(config: MkConfig,
   private val log: Logger = LoggerFactory.getLogger(javaClass)
   private val df: ThreadLocal<DecimalFormat> = ThreadLocal.withInitial { DecimalFormat("#0.00000000") }
 
-  override fun getUrl(payment: MkAccount): String = "bitcoin:${payment.address}?amount=${payment.amount}"
+  override fun getUrl(account: MkAccount): String = "bitcoin:${account.address}?amount=${account.amount}"
 
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 

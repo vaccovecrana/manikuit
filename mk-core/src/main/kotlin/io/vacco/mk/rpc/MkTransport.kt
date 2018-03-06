@@ -21,8 +21,8 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail
   abstract fun getChainType(): MkAccount.Crypto
   abstract fun doCreate(): Pair<MkAccount, String>
-  abstract fun getUrl(payment: MkAccount): String
-  // abstract fun transfer(payments: Collection<MkAccount>, targets: Map<String, BigDecimal>, unitFee: BigInteger)
+  abstract fun getUrl(account: MkAccount): String
+  // abstract fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigInteger)
 
   fun create(): MkAccount {
     val pData = doCreate()
@@ -34,14 +34,14 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         .withGcmKey(Base64.getEncoder().encodeToString(key))
   }
 
-  fun decode(payment: MkAccount): String {
-    requireNotNull(payment.cipherText)
-    requireNotNull(payment.iv)
-    requireNotNull(payment.gcmKey)
+  fun decode(account: MkAccount): String {
+    requireNotNull(account.cipherText)
+    requireNotNull(account.iv)
+    requireNotNull(account.gcmKey)
     val dec = Base64.getDecoder()
     return String(GcmCrypto.decryptGcm(
-        Ciphertext(dec.decode(payment.cipherText),
-            dec.decode(payment.iv)), dec.decode(payment.gcmKey)),
+        Ciphertext(dec.decode(account.cipherText),
+            dec.decode(account.iv)), dec.decode(account.gcmKey)),
         Charsets.UTF_8)
   }
 
@@ -63,9 +63,10 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
       blockCache.store(blockList
           .map(this::getBlockDetail)
           .map { bd -> CgBlockDetail(
-              bd.first.copy(id = MurmurHash3.apply(bd.first.hash, bd.first.type)),
-              bd.second
-          )})
+              bd.first.copy(id = MurmurHash3.apply(bd.first.height, bd.first.hash, bd.first.type)),
+              bd.second)
+          }
+      )
     }
   }
 
