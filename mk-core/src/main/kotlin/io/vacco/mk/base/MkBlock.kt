@@ -32,5 +32,5 @@ data class MkBlock(
     @Attribute(nullable = false)
     @Index(loadFactor = 8)
     @JsonPropertyDescription("A crypto currency type.")
-    var type: MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.UNKNOWN
+    var type: MkAccount.Crypto = MkAccount.Crypto.UNKNOWN
 ) : ManagedEntity()

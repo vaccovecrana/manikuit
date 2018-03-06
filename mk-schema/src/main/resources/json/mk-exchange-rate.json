@@ -2,8 +2,8 @@
   "description": "An exchange rate between a crypto currency and a fiat currency.",
   "type": "object",
   "properties": {
-    "cryptoCurrency": {"$ref": "schema-types.json#/cryptoCurrency"},
-    "fiatCurrency": {"type": "string", "minLength": 3},
+    "crypto": {"$ref": "schema-types.json#/cryptoCurrency"},
+    "fiat": {"type": "string", "minLength": 3},
     "last": {"type": "number"}
   },
   "required": ["cryptoCurrency", "fiatCurrency", "last"],

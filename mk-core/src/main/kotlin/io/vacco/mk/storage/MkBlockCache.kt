@@ -15,7 +15,7 @@ class MkBlockCache(private val manager: PersistenceManager) {
     manager.saveEntities(blockRecords.flatMap { r0 -> r0.second })
   }
 
-  fun getLatestLocalBlockFor(type: MkExchangeRate.CryptoCurrency): Long {
+  fun getLatestLocalBlockFor(type: MkAccount.Crypto): Long {
     val maxCol = max("height")
     val row: Map<String, Any> = manager.select(maxCol)
         .from(MkBlock::class).where("type" eq type)
@@ -24,13 +24,13 @@ class MkBlockCache(private val manager: PersistenceManager) {
     return result ?: 0
   }
 
-  fun getPaymentsFor(address: String, type: MkExchangeRate.CryptoCurrency): List<MkPaymentRecord> {
+  fun getPaymentsFor(address: String, type: MkAccount.Crypto): List<MkPaymentRecord> {
     return manager.from(MkPaymentRecord::class)
         .where("address" eq address)
         .and("type" eq type).lazy()
   }
 
-  fun purge(cacheLimit: Long, type: MkExchangeRate.CryptoCurrency) {
+  fun purge(cacheLimit: Long, type: MkAccount.Crypto) {
     val purgedPayments = manager.from(MkPaymentRecord::class)
         .where("type" eq type)
         .and("timeUtcSec" lte cacheLimit).delete()

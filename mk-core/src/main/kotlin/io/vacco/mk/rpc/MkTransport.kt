@@ -19,11 +19,12 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getLatestBlockNumber(): Long
   abstract fun getBlock(height: Long): CgBlockSummary
   abstract fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail
-  abstract fun getChainType(): MkExchangeRate.CryptoCurrency
-  abstract fun doCreate(): Pair<MkPayment, String>
-  abstract fun getUrl(payment: MkPayment): String
+  abstract fun getChainType(): MkAccount.Crypto
+  abstract fun doCreate(): Pair<MkAccount, String>
+  abstract fun getUrl(payment: MkAccount): String
+  // abstract fun transfer(payments: Collection<MkAccount>, targets: Map<String, BigDecimal>, unitFee: BigInteger)
 
-  fun create(): MkPayment {
+  fun create(): MkAccount {
     val pData = doCreate()
     val key = GcmCrypto.generateKey(256)
     val encoded = GcmCrypto.encryptGcm(pData.second.toByteArray(), key)
@@ -33,7 +34,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         .withGcmKey(Base64.getEncoder().encodeToString(key))
   }
 
-  fun decode(payment: MkPayment): String {
+  fun decode(payment: MkAccount): String {
     requireNotNull(payment.cipherText)
     requireNotNull(payment.iv)
     requireNotNull(payment.gcmKey)
@@ -70,7 +71,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   override fun purge() = blockCache.purge(blockCacheCutOffSec(), getChainType())
 
-  fun getPaymentsFor(address: String, type: MkExchangeRate.CryptoCurrency): List<MkPaymentRecord> =
+  fun getPaymentsFor(address: String, type: MkAccount.Crypto): List<MkPaymentRecord> =
       blockCache.getPaymentsFor(address, type)
 
   fun getStatus(payment: MkPaymentRecord, currentBlockHeight: Long): MkPaymentRecord.Status {

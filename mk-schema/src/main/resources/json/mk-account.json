@@ -2,7 +2,7 @@
   "description": "core crypto gateway payment.",
   "additionalProperties": false,
   "properties": {
-    "type": {"$ref": "schema-types.json#/cryptoCurrency"},
+    "crypto": {"$ref": "schema-types.json#/cryptoCurrency"},
     "address": {"$ref": "schema-types.json#/cryptoAddress"},
     "cipherText": {
       "description": "AES GCM implementation specific encoded address private components (key data/passphrase, etc.).",

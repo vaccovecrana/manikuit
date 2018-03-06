@@ -12,7 +12,7 @@ import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
 import java.time.temporal.ChronoUnit
 import com.onyx.persistence.query.*
-import io.vacco.mk.base.MkExchangeRate
+import io.vacco.mk.base.MkAccount
 import io.vacco.mk.config.MkConfig
 import org.junit.Assert.*
 import org.slf4j.Logger
@@ -66,7 +66,7 @@ class BitcoindTransportSpec {
       assertNotNull(testAddress)
     }
     it("Can get all transactions for a particular address.") {
-      val addrTx = btc!!.getPaymentsFor(testAddress!!, MkExchangeRate.CryptoCurrency.BTC)
+      val addrTx = btc!!.getPaymentsFor(testAddress!!, MkAccount.Crypto.BTC)
       assertTrue(addrTx.isNotEmpty())
     }
     it("Can purge the cache for records older than 5 seconds.") {

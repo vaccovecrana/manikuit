@@ -18,18 +18,16 @@ class BitcoindTransport(config: MkConfig,
   private val log: Logger = LoggerFactory.getLogger(javaClass)
   private val df: ThreadLocal<DecimalFormat> = ThreadLocal.withInitial { DecimalFormat("#0.00000000") }
 
-  override fun getUrl(payment: MkPayment): String = "bitcoin:${payment.address}?amount=${payment.amount}"
+  override fun getUrl(payment: MkAccount): String = "bitcoin:${payment.address}?amount=${payment.amount}"
 
-  override fun getLatestBlockNumber(): Long {
-    return rpcRequest(Long::class.java, "getblockcount").second
-  }
+  override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
   override fun getBlock(height: Long): CgBlockSummary {
     val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
     val btcBlock = getBtcBlock(btcBlockHash)
     return Pair(
         MkBlock(height = height, timeUtcSec = btcBlock.time,
-            hash = btcBlockHash, type = MkExchangeRate.CryptoCurrency.BTC
+            hash = btcBlockHash, type = MkAccount.Crypto.BTC
         ), btcBlock.tx.toList()
     )
   }
@@ -45,18 +43,18 @@ class BitcoindTransport(config: MkConfig,
         .filter { txout -> txout.second.scriptPubKey.addresses.isNotEmpty() }
         .flatMap { txout -> txout.second.scriptPubKey.addresses.map { addr -> BtcAddrOut(txout, addr) } }
         .map { addrOut -> MkPaymentRecord(
-            type = MkExchangeRate.CryptoCurrency.BTC, address = addrOut.second,
+            type = MkAccount.Crypto.BTC, address = addrOut.second,
             txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
             blockHeight = summary.first.height, timeUtcSec = addrOut.first.first.time)
         }
     return CgBlockDetail(summary.first, tx)
   }
 
-  override fun doCreate(): Pair<MkPayment, String> {
+  override fun doCreate(): Pair<MkAccount, String> {
     val address = getNewAddress()
-    return Pair(MkPayment()
+    return Pair(MkAccount()
         .withAddress(address.first)
-        .withType(MkExchangeRate.CryptoCurrency.BTC), address.second)
+        .withCrypto(MkAccount.Crypto.BTC), address.second)
   }
 
   private fun getNewAddress(): Pair<String, String> {
@@ -65,7 +63,7 @@ class BitcoindTransport(config: MkConfig,
     return Pair(address, privateKey)
   }
 
-  override fun getChainType(): MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.BTC
+  override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.BTC
 
   private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash).second
 

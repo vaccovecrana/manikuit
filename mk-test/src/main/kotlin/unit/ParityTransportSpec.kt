@@ -4,7 +4,7 @@ import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory
 import com.onyx.persistence.manager.PersistenceManager
 import com.onyx.persistence.query.from
 import com.onyx.persistence.query.gte
-import io.vacco.mk.base.MkExchangeRate
+import io.vacco.mk.base.MkAccount
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.rpc.ParityTransport
@@ -37,13 +37,13 @@ class ParityTransportSpec {
       factory.initialize()
       manager = factory.persistenceManager
       val cfg = MkConfig(12,
-          1, ChronoUnit.HOURS, 5, TimeUnit.SECONDS)
+          1, ChronoUnit.HOURS, 8, TimeUnit.SECONDS)
       cfg.rootUrl = "http://127.0.0.1:8545"
       eth = ParityTransport(cfg, MkBlockCache(manager!!))
     }
     J8Spec.it("Can update the ETH cache.") { eth!!.update() }
-    J8Spec.it("Can find transactions recorded in the last 40 minutes.") {
-      val utc15MinAgo = eth!!.nowUtcSecMinus(40, ChronoUnit.MINUTES)
+    J8Spec.it("Can find transactions recorded in the last 60 minutes.") {
+      val utc15MinAgo = eth!!.nowUtcSecMinus(60, ChronoUnit.MINUTES)
       val tx = manager!!.from(MkPaymentRecord::class)
           .where("timeUtcSec" gte utc15MinAgo)
           .list<MkPaymentRecord>()
@@ -68,7 +68,7 @@ class ParityTransportSpec {
       assertNotNull(testAddress)
     }
     J8Spec.it("Can get all transactions for a particular address.") {
-      val addrTx = eth!!.getPaymentsFor(testAddress!!, MkExchangeRate.CryptoCurrency.ETH)
+      val addrTx = eth!!.getPaymentsFor(testAddress!!, MkAccount.Crypto.ETH)
       assertTrue(addrTx.isNotEmpty())
     }
     J8Spec.it("Can purge the cache for records older than 5 seconds.") {

@@ -16,7 +16,7 @@ class ParityTransport(config: MkConfig,
   private val roundHalfEven = RoundingMode.HALF_EVEN
   private val ethFactor = bd18(BigInteger.valueOf(10).pow(weiSize))
 
-  override fun getUrl(payment: MkPayment): String = payment.address
+  override fun getUrl(payment: MkAccount): String = payment.address
 
   override fun getLatestBlockNumber(): Long {
     return decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
@@ -27,7 +27,7 @@ class ParityTransport(config: MkConfig,
         "0x${java.lang.Long.toHexString(height)}", false).second
     return CgBlockSummary(MkBlock(
         height = height, timeUtcSec = decodeLong(ethBlock.timestamp),
-        hash = ethBlock.hash, type = MkExchangeRate.CryptoCurrency.ETH
+        hash = ethBlock.hash, type = MkAccount.Crypto.ETH
     ), ethBlock.transactions)
   }
 
@@ -38,19 +38,19 @@ class ParityTransport(config: MkConfig,
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeWei(tx.value) != BigInteger.ZERO }
         .map { tx -> MkPaymentRecord(
-            type = MkExchangeRate.CryptoCurrency.ETH, address = tx.to,
+            type = MkAccount.Crypto.ETH, address = tx.to,
             txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
             timeUtcSec = summary.first.timeUtcSec
         ) }
     return CgBlockDetail(summary.first, tx)
   }
 
-  override fun doCreate(): Pair<MkPayment, String> {
+  override fun doCreate(): Pair<MkAccount, String> {
     val addressPassPhrase = UUID.randomUUID().toString()
     val ethAddress = newAccount(addressPassPhrase)
     val accountData = mapper.writeValueAsString(exportAccount(ethAddress, addressPassPhrase))
-    return Pair(MkPayment()
-        .withType(MkExchangeRate.CryptoCurrency.ETH)
+    return Pair(MkAccount()
+        .withCrypto(MkAccount.Crypto.ETH)
         .withAddress(ethAddress), "$accountData::$addressPassPhrase")
   }
 
@@ -60,7 +60,7 @@ class ParityTransport(config: MkConfig,
   private fun exportAccount(address: String, passphrase: String): Map<*, *> = rpcRequest(
       Map::class.java, "parity_exportAccount", address, passphrase).second
 
-  override fun getChainType(): MkExchangeRate.CryptoCurrency = MkExchangeRate.CryptoCurrency.ETH
+  override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.ETH
   private fun decodeLong(input: String): Long = java.lang.Long.decode(input)
   private fun decodeWei(hexWei: String): BigInteger = BigInteger(hexWei.replace("0x", ""), 16)
 
