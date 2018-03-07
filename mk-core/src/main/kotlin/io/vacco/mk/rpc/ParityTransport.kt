@@ -40,7 +40,7 @@ class ParityTransport(config: MkConfig,
         .map { tx -> MkPaymentRecord(
             type = MkAccount.Crypto.ETH, address = tx.to,
             txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
-            timeUtcSec = summary.first.timeUtcSec
+            outputIdx = 0, timeUtcSec = summary.first.timeUtcSec
         ) }
     return CgBlockDetail(summary.first, tx)
   }

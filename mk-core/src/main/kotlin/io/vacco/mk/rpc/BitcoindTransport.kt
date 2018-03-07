@@ -45,7 +45,8 @@ class BitcoindTransport(config: MkConfig,
         .map { addrOut -> MkPaymentRecord(
             type = MkAccount.Crypto.BTC, address = addrOut.second,
             txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
-            blockHeight = summary.first.height, timeUtcSec = addrOut.first.first.time)
+            blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
+            timeUtcSec = addrOut.first.first.time)
         }
     return CgBlockDetail(summary.first, tx)
   }
@@ -68,9 +69,8 @@ class BitcoindTransport(config: MkConfig,
   private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash).second
 
   private fun getTransaction(txId: String): BtcTx? {
-    try {
-      return rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second
-    } catch (e: Exception) { log.error(e.message) }
+    try { return rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second }
+    catch (e: Exception) { log.error(e.message) }
     return null
   }
 }

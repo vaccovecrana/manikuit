@@ -7,6 +7,12 @@ import javax.validation.constraints.*
 
 @Entity
 data class MkPaymentRecord(
+
+    @Identifier
+    @Attribute(nullable = false)
+    @JsonPropertyDescription("Internal record hash.")
+    var id: String = "",
+
     @Attribute(nullable = false)
     @JsonPropertyDescription("A crypto currency type.")
     var type: MkAccount.Crypto = MkAccount.Crypto.UNKNOWN,
@@ -17,7 +23,6 @@ data class MkPaymentRecord(
     @JsonPropertyDescription("A crypto currency address.")
     var address: String = "",
 
-    @Identifier
     @Attribute(nullable = false)
     @Size(min = 24, max = 128)
     @JsonPropertyDescription("A transaction hash.")
@@ -27,12 +32,17 @@ data class MkPaymentRecord(
     @JsonPropertyDescription("Implementation specific string encoding for crypto currency payment amounts.")
     var amount: String = "",
 
-    @Attribute
+    @Attribute(nullable = false)
     @DecimalMin("0")
     @JsonPropertyDescription("The first block height where this transaction was found.")
     var blockHeight: Long = 0,
 
-    @Attribute
+    @Attribute(nullable = false)
+    @DecimalMin("0")
+    @JsonPropertyDescription("An implementation specific transaction output index (mostly 0 for non-utxo models).")
+    var outputIdx: Long = 0,
+
+    @Attribute(nullable = false)
     @DecimalMin("0")
     @JsonPropertyDescription("The UTC epoch timestamp of this transaction.")
     var timeUtcSec: Long = 0

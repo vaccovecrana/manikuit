@@ -36,7 +36,7 @@ class BitcoindTransportSpec {
     beforeAll {
       factory.initialize()
       manager = factory.persistenceManager
-      val cfg = MkConfig(6, 1, ChronoUnit.HOURS, 5, TimeUnit.SECONDS)
+      val cfg = MkConfig(6, 2, ChronoUnit.HOURS, 30, TimeUnit.SECONDS)
       cfg.rootUrl = "http://127.0.0.1:18332"
       cfg.username = "gopher"
       cfg.password = "omglol"
@@ -66,7 +66,7 @@ class BitcoindTransportSpec {
       assertNotNull(testAddress)
     }
     it("Can get all transactions for a particular address.") {
-      val addrTx = btc!!.getPaymentsFor(testAddress!!, MkAccount.Crypto.BTC)
+      val addrTx = btc!!.getPaymentsFor(testAddress!!)
       assertTrue(addrTx.isNotEmpty())
     }
     it("Can purge the cache for records older than 5 seconds.") {

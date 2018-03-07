@@ -68,7 +68,7 @@ class ParityTransportSpec {
       assertNotNull(testAddress)
     }
     J8Spec.it("Can get all transactions for a particular address.") {
-      val addrTx = eth!!.getPaymentsFor(testAddress!!, MkAccount.Crypto.ETH)
+      val addrTx = eth!!.getPaymentsFor(testAddress!!)
       assertTrue(addrTx.isNotEmpty())
     }
     J8Spec.it("Can purge the cache for records older than 5 seconds.") {

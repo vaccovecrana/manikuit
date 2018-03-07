@@ -48,32 +48,26 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   override fun update() {
     purge()
     val utcCoff = blockScanCutOffSec()
-    val blockList: MutableList<CgBlockSummary> = mutableListOf()
     val loc0 = blockCache.getLatestLocalBlockFor(getChainType())
     var rem0 = getLatestBlockNumber()
     if (rem0 >= loc0) {
       var blockSummary = getBlock(rem0)
       while(blockSummary.first.timeUtcSec >= utcCoff) {
         rem0 -= 1
-        blockList.add(blockSummary)
+        if (blockSummary.second.isNotEmpty()) {
+          val bd = getBlockDetail(blockSummary)
+          blockCache.storeBlock(bd.first)
+          blockCache.storeRecords(bd.second)
+        }
         blockSummary = getBlock(rem0)
       }
-    }
-    if (blockList.isNotEmpty()) {
-      blockCache.store(blockList
-          .map(this::getBlockDetail)
-          .map { bd -> CgBlockDetail(
-              bd.first.copy(id = MurmurHash3.apply(bd.first.height, bd.first.hash, bd.first.type)),
-              bd.second)
-          }
-      )
     }
   }
 
   override fun purge() = blockCache.purge(blockCacheCutOffSec(), getChainType())
 
-  fun getPaymentsFor(address: String, type: MkAccount.Crypto): List<MkPaymentRecord> =
-      blockCache.getPaymentsFor(address, type)
+  fun getPaymentsFor(address: String): List<MkPaymentRecord> =
+      blockCache.getPaymentsFor(address, getChainType())
 
   fun getStatus(payment: MkPaymentRecord, currentBlockHeight: Long): MkPaymentRecord.Status {
     return if (getBlockDelta(payment, currentBlockHeight) >= config.confirmationThreshold)
