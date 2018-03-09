@@ -4,6 +4,7 @@ import io.vacco.mk.base.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
 import io.vacco.mk.util.*
+import java.math.BigDecimal
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -22,7 +23,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getChainType(): MkAccount.Crypto
   abstract fun doCreate(): Pair<MkAccount, String>
   abstract fun getUrl(account: MkAccount): String
-  // abstract fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigInteger)
+  abstract fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal)
 
   fun create(): MkAccount {
     val pData = doCreate()
@@ -48,20 +49,22 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   override fun update() {
     purge()
     val utcCoff = blockScanCutOffSec()
-    val loc0 = blockCache.getLatestLocalBlockFor(getChainType())
-    var rem0 = getLatestBlockNumber()
-    if (rem0 >= loc0) {
-      var blockSummary = getBlock(rem0)
+    val localLatest = blockCache.getLatestLocalBlockFor(getChainType())
+    val remoteLatest = getLatestBlockNumber()
+    val blockSummaries = mutableListOf<CgBlockSummary>()
+
+    if (remoteLatest >= localLatest) {
+      var remoteStart = remoteLatest
+      var blockSummary = getBlock(remoteStart)
       while(blockSummary.first.timeUtcSec >= utcCoff) {
-        rem0 -= 1
-        if (blockSummary.second.isNotEmpty()) {
-          val bd = getBlockDetail(blockSummary)
-          blockCache.storeBlock(bd.first)
-          blockCache.storeRecords(bd.second)
-        }
-        blockSummary = getBlock(rem0)
+        blockCache.storeBlock(blockSummary.first)
+        blockSummaries.add(blockSummary)
+        remoteStart -= 1
+        blockSummary = getBlock(remoteStart)
       }
     }
+    blockSummaries.asSequence().map(this::getBlockDetail).map { it.second }
+        .forEach { paymentList -> blockCache.storeRecords(paymentList) }
   }
 
   override fun purge() = blockCache.purge(blockCacheCutOffSec(), getChainType())

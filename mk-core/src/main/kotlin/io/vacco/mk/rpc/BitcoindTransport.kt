@@ -6,7 +6,10 @@ import io.vacco.mk.base.btc.BtcTx
 import io.vacco.mk.base.btc.Vout
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.runBlocking
 import org.slf4j.*
+import java.math.BigDecimal
 import java.text.DecimalFormat
 
 typealias BtcOut = Pair<BtcTx, Vout>
@@ -22,6 +25,10 @@ class BitcoindTransport(config: MkConfig,
 
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
+  override fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
+
+  }
+
   override fun getBlock(height: Long): CgBlockSummary {
     val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
     val btcBlock = getBtcBlock(btcBlockHash)
@@ -33,21 +40,24 @@ class BitcoindTransport(config: MkConfig,
   }
 
   override fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail {
-    val tx = summary.second.map(this::getTransaction)
-        .filter { tx -> tx != null }
-        .filter { tx -> tx!!.vout.isNotEmpty() }
-        .flatMap { tx -> tx!!.vout.map { out -> BtcOut(tx, out) } }
-        .filter { txout -> txout.second.value > 0 }
-        .filter { txout -> txout.second.scriptPubKey != null }
-        .filter { txout -> txout.second.scriptPubKey.reqSigs > 0 }
-        .filter { txout -> txout.second.scriptPubKey.addresses.isNotEmpty() }
-        .flatMap { txout -> txout.second.scriptPubKey.addresses.map { addr -> BtcAddrOut(txout, addr) } }
-        .map { addrOut -> MkPaymentRecord(
-            type = MkAccount.Crypto.BTC, address = addrOut.second,
-            txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
-            blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
-            timeUtcSec = addrOut.first.first.time)
-        }
+    val deferred = summary.second.map { txId -> async { getTransaction(txId) } }
+    val tx = runBlocking {
+      deferred.map { it.await() }
+          .filter { tx -> tx != null }
+          .filter { tx -> tx!!.vout.isNotEmpty() }
+          .flatMap { tx -> tx!!.vout.map { out -> BtcOut(tx, out) } }
+          .filter { txout -> txout.second.value > 0 }
+          .filter { txout -> txout.second.scriptPubKey != null }
+          .filter { txout -> txout.second.scriptPubKey.reqSigs > 0 }
+          .filter { txout -> txout.second.scriptPubKey.addresses.isNotEmpty() }
+          .flatMap { txout -> txout.second.scriptPubKey.addresses.map { addr -> BtcAddrOut(txout, addr) } }
+          .map { addrOut -> MkPaymentRecord(
+              type = MkAccount.Crypto.BTC, address = addrOut.second,
+              txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
+              blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
+              timeUtcSec = addrOut.first.first.time)
+          }
+    }
     return CgBlockDetail(summary.first, tx)
   }
 
@@ -70,6 +80,12 @@ class BitcoindTransport(config: MkConfig,
 
   private fun getTransaction(txId: String): BtcTx? {
     try { return rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second }
+    catch (e: Exception) { log.error(e.message) }
+    return null
+  }
+
+  fun getTxOut(txId: String, vout: Long): Any? {
+    try { return rpcRequest(Any::class.java, "gettxout", txId, vout) }
     catch (e: Exception) { log.error(e.message) }
     return null
   }

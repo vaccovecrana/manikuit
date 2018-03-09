@@ -22,6 +22,10 @@ class ParityTransport(config: MkConfig,
     return decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
   }
 
+  override fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
+    
+  }
+
   override fun getBlock(height: Long): CgBlockSummary {
     val ethBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
         "0x${java.lang.Long.toHexString(height)}", false).second

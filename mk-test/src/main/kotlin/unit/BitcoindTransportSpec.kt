@@ -36,13 +36,24 @@ class BitcoindTransportSpec {
     beforeAll {
       factory.initialize()
       manager = factory.persistenceManager
-      val cfg = MkConfig(6, 2, ChronoUnit.HOURS, 30, TimeUnit.SECONDS)
+      val cfg = MkConfig(6, 1, ChronoUnit.HOURS, 10, TimeUnit.SECONDS)
       cfg.rootUrl = "http://127.0.0.1:18332"
       cfg.username = "gopher"
       cfg.password = "omglol"
+      cfg.connectionPoolSize = 8
       btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
     }
+
+    it("Can verify transaction outputs against the RPC client.") {
+      // val addr = "n2YyzKVivQejcMmTWebGdjwzJ9eLuCWhr3"
+      val bd0 = btc!!.getBlockDetail(btc!!.getBlock(1287687))
+      bd0.second.filter { pr -> pr.outputIdx > 2 }
+          .map { pr0 -> btc!!.getTxOut(pr0.txId, pr0.outputIdx) }
+          .forEach { txo -> log.info(txo.toString()) }
+    }
+
     it("Can update the BTC cache.") { btc!!.update() }
+
     it("Can find transactions recorded in the last 40 minutes.") {
       val utc15MinAgo = btc!!.nowUtcSecMinus(40, ChronoUnit.MINUTES)
       val tx = manager!!.from(MkPaymentRecord::class)

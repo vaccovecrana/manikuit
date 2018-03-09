@@ -14,6 +14,10 @@ open class HttpTransport(config: HttpConfig) {
 
   init {
     var bld = OkHttpClient.Builder()
+    if (config.connectionPoolSize != -1) {
+      val connPool = ConnectionPool(config.connectionPoolSize, config.keepAlive, config.keepAliveUnit)
+      bld = bld.connectionPool(connPool)
+    }
     if (config.username.isNotEmpty()) {
       if (config.password.isNotEmpty()) {
         bld.authenticator { _, response ->
@@ -38,7 +42,7 @@ open class HttpTransport(config: HttpConfig) {
         .build())
   }
 
-  fun postJson(jsonPayload: String): String { return postJson(null, jsonPayload) }
+  fun postJson(jsonPayload: String): String = postJson(null, jsonPayload)
 
   private fun processJson(r0: Request): String {
     if (log.isTraceEnabled) { log.trace("Raw HTTP request: [$r0]") }
