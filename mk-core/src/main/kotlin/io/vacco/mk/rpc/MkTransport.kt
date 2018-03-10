@@ -4,12 +4,13 @@ import io.vacco.mk.base.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
 import io.vacco.mk.util.*
+import org.slf4j.*
 import java.math.BigDecimal
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
 
-abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlockCache):
+abstract class MkTransport<T>(val config: MkConfig, private val blockCache: MkBlockCache):
     MkCachingTransport(config) {
 
   init {
@@ -17,13 +18,24 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     require(config.blockScanLimit > 0)
   }
 
+  protected val log: Logger = LoggerFactory.getLogger(javaClass)
+
   abstract fun getLatestBlockNumber(): Long
-  abstract fun getBlock(height: Long): CgBlockSummary
-  abstract fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail
+  abstract fun getBlock(height: Long): MkBlockSummary
+  abstract fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail
   abstract fun getChainType(): MkAccount.Crypto
   abstract fun doCreate(): Pair<MkAccount, String>
   abstract fun getUrl(account: MkAccount): String
   abstract fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal)
+  abstract fun opPubSubMessage(payload: T)
+
+  var onNewBlock: (block: MkBlockDetail) -> Unit = {}
+
+  protected fun newBlock(blockDetail: MkBlockDetail) = {
+    blockCache.storeBlock(blockDetail.first)
+    blockCache.storeRecords(blockDetail.second)
+    onNewBlock(blockDetail)
+  }
 
   fun create(): MkAccount {
     val pData = doCreate()
@@ -51,7 +63,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     val utcCoff = blockScanCutOffSec()
     val localLatest = blockCache.getLatestLocalBlockFor(getChainType())
     val remoteLatest = getLatestBlockNumber()
-    val blockSummaries = mutableListOf<CgBlockSummary>()
+    val blockSummaries = mutableListOf<MkBlockSummary>()
 
     if (remoteLatest >= localLatest) {
       var remoteStart = remoteLatest

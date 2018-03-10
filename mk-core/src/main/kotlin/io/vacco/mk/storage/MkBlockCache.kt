@@ -3,7 +3,6 @@ package io.vacco.mk.storage
 import com.onyx.persistence.manager.PersistenceManager
 import com.onyx.persistence.query.*
 import io.vacco.mk.base.*
-import io.vacco.mk.rpc.CgBlockDetail
 import io.vacco.mk.util.MurmurHash3
 import org.slf4j.*
 

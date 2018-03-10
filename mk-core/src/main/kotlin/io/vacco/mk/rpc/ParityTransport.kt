@@ -1,5 +1,6 @@
 package io.vacco.mk.rpc
 
+import com.fasterxml.jackson.databind.JsonNode
 import io.vacco.mk.base.*
 import io.vacco.mk.base.eth.*
 import io.vacco.mk.config.MkConfig
@@ -10,7 +11,7 @@ import java.math.RoundingMode
 import java.util.*
 
 class ParityTransport(config: MkConfig,
-                      blockCache: MkBlockCache): MkTransport(config, blockCache) {
+                      blockCache: MkBlockCache): MkTransport<JsonNode>(config, blockCache) {
 
   private val weiSize = 18
   private val roundHalfEven = RoundingMode.HALF_EVEN
@@ -26,16 +27,20 @@ class ParityTransport(config: MkConfig,
     
   }
 
-  override fun getBlock(height: Long): CgBlockSummary {
+  override fun opPubSubMessage(payload: JsonNode) {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  }
+
+  override fun getBlock(height: Long): MkBlockSummary {
     val ethBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
         "0x${java.lang.Long.toHexString(height)}", false).second
-    return CgBlockSummary(MkBlock(
+    return MkBlockSummary(MkBlock(
         height = height, timeUtcSec = decodeLong(ethBlock.timestamp),
         hash = ethBlock.hash, type = MkAccount.Crypto.ETH
     ), ethBlock.transactions)
   }
 
-  override fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail {
+  override fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
     val ethBlock = rpcRequest(EthBlockDetail::class.java, "eth_getBlockByNumber",
         "0x${java.lang.Long.toHexString(summary.first.height)}", true).second
     val tx = ethBlock.transactions
@@ -46,7 +51,7 @@ class ParityTransport(config: MkConfig,
             txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
             outputIdx = 0, timeUtcSec = summary.first.timeUtcSec
         ) }
-    return CgBlockDetail(summary.first, tx)
+    return MkBlockDetail(summary.first, tx)
   }
 
   override fun doCreate(): Pair<MkAccount, String> {

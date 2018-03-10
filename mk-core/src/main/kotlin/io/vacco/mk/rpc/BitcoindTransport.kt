@@ -1,14 +1,12 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.base.*
-import io.vacco.mk.base.btc.BtcBlock
-import io.vacco.mk.base.btc.BtcTx
-import io.vacco.mk.base.btc.Vout
+import io.vacco.mk.base.btc.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.runBlocking
-import org.slf4j.*
+import org.zeromq.ZMsg
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -16,9 +14,8 @@ typealias BtcOut = Pair<BtcTx, Vout>
 typealias BtcAddrOut = Pair<BtcOut, String>
 
 class BitcoindTransport(config: MkConfig,
-                        blockCache: MkBlockCache): MkTransport(config, blockCache) {
+                        blockCache: MkBlockCache): MkTransport<ZMsg>(config, blockCache) {
 
-  private val log: Logger = LoggerFactory.getLogger(javaClass)
   private val df: ThreadLocal<DecimalFormat> = ThreadLocal.withInitial { DecimalFormat("#0.00000000") }
 
   override fun getUrl(account: MkAccount): String = "bitcoin:${account.address}?amount=${account.amount}"
@@ -29,7 +26,20 @@ class BitcoindTransport(config: MkConfig,
 
   }
 
-  override fun getBlock(height: Long): CgBlockSummary {
+  override fun opPubSubMessage(payload: ZMsg) {
+    requireNotNull(payload)
+    require(payload.size == 3)
+    val topic = payload.popString()
+    when (topic) {
+      "hashblock" -> {
+        val blockHash = payload.popString()
+        val blockDetail = getBlockDetail(getBlock(getBtcBlock(blockHash).height))
+        newBlock(blockDetail)
+      }
+    }
+  }
+
+  override fun getBlock(height: Long): MkBlockSummary {
     val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
     val btcBlock = getBtcBlock(btcBlockHash)
     return Pair(
@@ -39,7 +49,7 @@ class BitcoindTransport(config: MkConfig,
     )
   }
 
-  override fun getBlockDetail(summary: CgBlockSummary): CgBlockDetail {
+  override fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
     val deferred = summary.second.map { txId -> async { getTransaction(txId) } }
     val tx = runBlocking {
       deferred.map { it.await() }
@@ -58,7 +68,7 @@ class BitcoindTransport(config: MkConfig,
               timeUtcSec = addrOut.first.first.time)
           }
     }
-    return CgBlockDetail(summary.first, tx)
+    return MkBlockDetail(summary.first, tx)
   }
 
   override fun doCreate(): Pair<MkAccount, String> {
