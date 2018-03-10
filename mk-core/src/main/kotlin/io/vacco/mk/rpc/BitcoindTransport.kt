@@ -33,8 +33,15 @@ class BitcoindTransport(config: MkConfig,
     when (topic) {
       "hashblock" -> {
         val blockHash = payload.popString()
-        val blockDetail = getBlockDetail(getBlock(getBtcBlock(blockHash).height))
+        val btcBlock = getBtcBlock(blockHash)
+        val blockSummary = getBlock(btcBlock.height)
+        val blockDetail = getBlockDetail(blockSummary)
         newBlock(blockDetail)
+      }
+      "hashtx" -> {
+        if (log.isTraceEnabled) {
+          log.trace("New tx hash [${payload.popString()}]")
+        }
       }
     }
   }
