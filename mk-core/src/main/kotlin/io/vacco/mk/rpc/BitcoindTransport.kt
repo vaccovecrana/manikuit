@@ -21,9 +21,13 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
   private val zmqClient = ctx.createSocket(ZMQ.SUB)
   private var zmqHandler: Deferred<Unit>? = null
 
+  private val hashTx = "hashtx"
+  private val hashBlock = "hashblock"
+
   init {
     zmqClient.connect(config.pubSubUrl)
-    zmqClient.subscribe("hashblock")
+    zmqClient.subscribe(hashBlock)
+    zmqClient.subscribe(hashTx)
     zmqHandler = async { while (true) { onZmqMessage(ZMsg.recvMsg(zmqClient)) } }
   }
 
@@ -97,7 +101,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     if (msg.size == 3) {
       val topic = msg.popString()
       when (topic) {
-        "hashblock" -> {
+        hashBlock -> {
           val btcBlock = getBtcBlock(msg.popString())
           val blockSummary = getBlock(btcBlock.height)
           val blockDetail = getBlockDetail(blockSummary)

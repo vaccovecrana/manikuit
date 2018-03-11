@@ -35,7 +35,7 @@ class BitcoindIpcSpec {
     }
 
     it("Opens an IPC socket, listens and forwards messages.") {
-      Thread.sleep(60000)
+      Thread.sleep(1200000)
       btc?.close()
     }
   }
