@@ -21,5 +21,7 @@ data class MkConfig(
     @DecimalMin("0")
     var blockCacheLimit: Long = 0,
     @JsonPropertyDescription("Time limit unit type subset equivalent to {@link java.util.concurrent.TimeUnit} for keeping cached copies of blocks/transactions.")
-    var blockCacheLimitUnit: TimeUnit = TimeUnit.NANOSECONDS
+    var blockCacheLimitUnit: TimeUnit = TimeUnit.NANOSECONDS,
+    @JsonPropertyDescription("Pub/sub URI to receive implementation specific notifications from the processing daemon.")
+    var pubSubUrl: String = ""
 ): HttpConfig()

@@ -10,9 +10,6 @@ import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
 import j8spec.J8Spec.*
 
-import org.zeromq.ZContext
-import org.zeromq.ZMQ
-import org.zeromq.ZMsg
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
@@ -29,6 +26,7 @@ class BitcoindIpcSpec {
       factory.initialize()
       manager = factory.persistenceManager
       val cfg = MkConfig(6, 1, ChronoUnit.HOURS, 10, TimeUnit.SECONDS)
+      cfg.pubSubUrl = "tcp://127.0.0.1:28332"
       cfg.rootUrl = "http://127.0.0.1:18332"
       cfg.username = "gopher"
       cfg.password = "omglol"
@@ -37,18 +35,8 @@ class BitcoindIpcSpec {
     }
 
     it("Opens an IPC socket, listens and forwards messages.") {
-      val ctx = ZContext()
-      val client = ctx.createSocket(ZMQ.SUB)
-      client.connect("tcp://127.0.0.1:28332")
-      client.subscribe("hashtx")
-      client.subscribe("hashblock")
-      client.subscribe("rawblock")
-      client.subscribe("rawtx")
-      (0  .. 1024).forEach {
-        val msg = ZMsg.recvMsg(client)
-        btc!!.opPubSubMessage(msg)
-      }
-      ctx.close()
+      Thread.sleep(60000)
+      btc?.close()
     }
   }
 }

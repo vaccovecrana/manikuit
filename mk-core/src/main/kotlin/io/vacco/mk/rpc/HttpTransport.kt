@@ -3,6 +3,7 @@ package io.vacco.mk.rpc
 import io.vacco.mk.config.HttpConfig
 import okhttp3.*
 import org.slf4j.*
+import java.util.concurrent.ForkJoinPool
 
 typealias QueryParam = Pair<String, Any>
 
@@ -10,10 +11,10 @@ open class HttpTransport(config: HttpConfig) {
 
   private val log: Logger = LoggerFactory.getLogger(this.javaClass)
   private val rootUrl = HttpUrl.parse(config.rootUrl)
-  private var client: OkHttpClient
+  protected var client: OkHttpClient
 
   init {
-    var bld = OkHttpClient.Builder()
+    var bld = OkHttpClient.Builder().dispatcher(Dispatcher(ForkJoinPool.commonPool()))
     if (config.connectionPoolSize != -1) {
       val connPool = ConnectionPool(config.connectionPoolSize, config.keepAlive, config.keepAliveUnit)
       bld = bld.connectionPool(connPool)

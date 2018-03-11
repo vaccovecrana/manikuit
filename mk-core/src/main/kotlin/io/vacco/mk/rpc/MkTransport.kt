@@ -5,13 +5,14 @@ import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
 import io.vacco.mk.util.*
 import org.slf4j.*
+import java.io.Closeable
 import java.math.BigDecimal
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
 
-abstract class MkTransport<T>(val config: MkConfig, private val blockCache: MkBlockCache):
-    MkCachingTransport(config) {
+abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlockCache):
+    MkCachingTransport(config), Closeable {
 
   init {
     require(config.blockCacheLimit > 0)
@@ -26,8 +27,7 @@ abstract class MkTransport<T>(val config: MkConfig, private val blockCache: MkBl
   abstract fun getChainType(): MkAccount.Crypto
   abstract fun doCreate(): Pair<MkAccount, String>
   abstract fun getUrl(account: MkAccount): String
-  abstract fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal)
-  abstract fun opPubSubMessage(payload: T)
+  abstract fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal)
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
 

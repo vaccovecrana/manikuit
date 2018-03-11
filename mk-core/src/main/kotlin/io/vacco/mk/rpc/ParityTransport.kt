@@ -1,34 +1,48 @@
 package io.vacco.mk.rpc
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.vacco.mk.base.*
 import io.vacco.mk.base.eth.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.math.RoundingMode
+import okhttp3.*
+import java.math.*
 import java.util.*
 
-class ParityTransport(config: MkConfig,
-                      blockCache: MkBlockCache): MkTransport<JsonNode>(config, blockCache) {
+class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(config, blockCache) {
 
   private val weiSize = 18
   private val roundHalfEven = RoundingMode.HALF_EVEN
   private val ethFactor = bd18(BigInteger.valueOf(10).pow(weiSize))
+  private var webSocket: WebSocket? = client.newWebSocket(Request.Builder().url(config.pubSubUrl).build(),
+      object : WebSocketListener() {
+        override fun onOpen(webSocket: WebSocket?, response: Response?) {
+          val msg = mapper.writeValueAsString(mapOf(
+              "id" to UUID.randomUUID(), "jsonrpc" to "2.0", "method" to "eth_subscribe",
+              "params" to arrayOf("logs", mapOf("fromBlock" to "latest", "toBlock" to "latest"))))
+          webSocket!!.send(msg)
+        }
+        override fun onMessage(webSocket: WebSocket?, text: String?) {
+          val payload = mapper.readTree(text)
+          val tree = payload.path("params").path("result")
+          if (tree.isArray && tree.size() > 0) {
+            val firstTx = tree[0]
+            val blockNoStr = firstTx.path("blockNumber").asText("")
+            if (blockNoStr.isNotEmpty()) {
+              val blockNo = decodeLong(blockNoStr)
+              val blockSum = getBlock(blockNo)
+              val blockDetail = getBlockDetail(blockSum)
+              newBlock(blockDetail)
+            }
+          }
+        }
+      })
 
+  override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.ETH
   override fun getUrl(account: MkAccount): String = account.address
+  override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
 
-  override fun getLatestBlockNumber(): Long {
-    return decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
-  }
+  override fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
 
-  override fun transfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
-    
-  }
-
-  override fun opPubSubMessage(payload: JsonNode) {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
   override fun getBlock(height: Long): MkBlockSummary {
@@ -47,10 +61,10 @@ class ParityTransport(config: MkConfig,
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeWei(tx.value) != BigInteger.ZERO }
         .map { tx -> MkPaymentRecord(
-            type = MkAccount.Crypto.ETH, address = tx.to,
-            txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
-            outputIdx = 0, timeUtcSec = summary.first.timeUtcSec
-        ) }
+              type = MkAccount.Crypto.ETH, address = tx.to,
+              txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
+              outputIdx = 0, timeUtcSec = summary.first.timeUtcSec
+          ) }
     return MkBlockDetail(summary.first, tx)
   }
 
@@ -63,13 +77,14 @@ class ParityTransport(config: MkConfig,
         .withAddress(ethAddress), "$accountData::$addressPassPhrase")
   }
 
+  override fun close() { webSocket?.close(1000, "Transport is closing") }
+
   private fun netVersion(): Int = rpcRequest(Int::class.java, "net_version").second
   private fun protocolVersion(): Int = Integer.decode(rpcRequest(String::class.java, "eth_protocolVersion").second)
   private fun newAccount(passphrase: String): String = rpcRequest(String::class.java, "personal_newAccount", passphrase).second
   private fun exportAccount(address: String, passphrase: String): Map<*, *> = rpcRequest(
       Map::class.java, "parity_exportAccount", address, passphrase).second
 
-  override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.ETH
   private fun decodeLong(input: String): Long = java.lang.Long.decode(input)
   private fun decodeWei(hexWei: String): BigInteger = BigInteger(hexWei.replace("0x", ""), 16)
 
