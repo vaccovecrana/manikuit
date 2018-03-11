@@ -37,6 +37,7 @@ class BitcoindTransportSpec {
       factory.initialize()
       manager = factory.persistenceManager
       val cfg = MkConfig(6, 1, ChronoUnit.HOURS, 10, TimeUnit.SECONDS)
+      cfg.pubSubUrl = "tcp://127.0.0.1:28332"
       cfg.rootUrl = "http://127.0.0.1:18332"
       cfg.username = "gopher"
       cfg.password = "omglol"

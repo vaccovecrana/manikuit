@@ -38,6 +38,7 @@ class ParityTransportSpec {
       manager = factory.persistenceManager
       val cfg = MkConfig(12,
           1, ChronoUnit.HOURS, 60, TimeUnit.SECONDS)
+      cfg.pubSubUrl = "ws://127.0.0.1:8546"
       cfg.rootUrl = "http://127.0.0.1:8545"
       eth = ParityTransport(cfg, MkBlockCache(manager!!))
     }

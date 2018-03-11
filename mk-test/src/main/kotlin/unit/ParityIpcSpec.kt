@@ -32,9 +32,8 @@ class ParityIpcSpec : WebSocketListener() {
     }
 
     it("Opens a new websocket Parity connection and processes incoming messages") {
-      Thread.sleep(40000)
+      Thread.sleep(80000)
       eth?.close()
     }
   }
 }
-
