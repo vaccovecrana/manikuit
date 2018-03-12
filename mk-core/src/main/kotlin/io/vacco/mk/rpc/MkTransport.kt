@@ -62,9 +62,9 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     return MkAccount()
         .withCrypto(getChainType())
         .withAddress(address)
-        .withGcmKey(b64Enc.encodeToString(encoded.iv))
+        .withGcmKey(b64Enc.encodeToString(key))
         .withCipherText(b64Enc.encodeToString(encoded.ciphertext))
-        .withIv(b64Enc.encodeToString(key))
+        .withIv(b64Enc.encodeToString(encoded.iv))
   }
 
   override fun update() {

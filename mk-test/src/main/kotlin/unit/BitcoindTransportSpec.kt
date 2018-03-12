@@ -12,7 +12,6 @@ import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
 import java.time.temporal.ChronoUnit
 import com.onyx.persistence.query.*
-import io.vacco.mk.base.MkAccount
 import io.vacco.mk.config.MkConfig
 import org.junit.Assert.*
 import org.slf4j.Logger
@@ -45,8 +44,18 @@ class BitcoindTransportSpec {
       btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
     }
 
+    it("Can create a new payment, along with a backing account.") {
+      val payment = btc!!.create()
+      assertNotNull(payment)
+      assertNotNull(payment.cipherText)
+      assertNotNull(payment.iv)
+      assertNotNull(payment.gcmKey)
+      val keyData = btc!!.decode(payment)
+      assertNotNull(keyData)
+      log.info(keyData)
+    }
+
     it("Can verify transaction outputs against the RPC client.") {
-      // val addr = "n2YyzKVivQejcMmTWebGdjwzJ9eLuCWhr3"
       val bd0 = btc!!.getBlockDetail(btc!!.getBlock(1287687))
       bd0.second.filter { pr -> pr.outputIdx > 2 }
           .map { pr0 -> btc!!.getTxOut(pr0.txId, pr0.outputIdx) }
@@ -85,16 +94,6 @@ class BitcoindTransportSpec {
       btc!!.purge()
       val tx = manager!!.from(MkPaymentRecord::class).list<MkPaymentRecord>()
       assertTrue(tx.isEmpty())
-    }
-    it("Can create a new payment, along with a backing account.") {
-      val payment = btc!!.create()
-      assertNotNull(payment)
-      assertNotNull(payment.cipherText)
-      assertNotNull(payment.iv)
-      assertNotNull(payment.gcmKey)
-      val keyData = btc!!.decode(payment)
-      assertNotNull(keyData)
-      log.info(keyData)
     }
   }
 }

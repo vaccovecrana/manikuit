@@ -7,5 +7,7 @@ import unit.*
     PersistenceSpec::class,
     RpcTransportSpec::class,
     BitcoindTransportSpec::class,
-    ParityTransportSpec::class
+    BitcoindIpcSpec::class,
+    ParityTransportSpec::class,
+    ParityIpcSpec::class
 ) class CombinedTestSuite
