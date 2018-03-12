@@ -32,10 +32,11 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
   }
 
   override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.BTC
-  override fun getUrl(account: MkAccount): String = "bitcoin:${account.address}?amount=${account.amount}"
+  override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
-  override fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
+  override fun submitTransfer(payments: Collection<MkPaymentDetail>,
+                              targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
 
   }
 
@@ -68,10 +69,9 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     return MkBlockDetail(summary.first, tx)
   }
 
-  override fun doCreate(): Pair<MkAccount, String> {
+  override fun doCreate(): Pair<String, String> {
     val address = getNewAddress()
-    return Pair(MkAccount().withAddress(address.first)
-        .withCrypto(MkAccount.Crypto.BTC), address.second)
+    return Pair(address.first, address.second)
   }
 
   override fun close() { zmqHandler?.cancel(NotActiveException("Transport is closing")) }

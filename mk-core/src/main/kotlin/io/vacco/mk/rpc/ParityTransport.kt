@@ -38,7 +38,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
       })
 
   override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.ETH
-  override fun getUrl(account: MkAccount): String = account.address
+  override fun getUrl(payment: MkPaymentDetail): String = payment.account.address
   override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
 
   override fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
@@ -68,13 +68,11 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     return MkBlockDetail(summary.first, tx)
   }
 
-  override fun doCreate(): Pair<MkAccount, String> {
+  override fun doCreate(): Pair<String, String> {
     val addressPassPhrase = UUID.randomUUID().toString()
     val ethAddress = newAccount(addressPassPhrase)
     val accountData = mapper.writeValueAsString(exportAccount(ethAddress, addressPassPhrase))
-    return Pair(MkAccount()
-        .withCrypto(MkAccount.Crypto.ETH)
-        .withAddress(ethAddress), "$accountData::$addressPassPhrase")
+    return Pair(ethAddress, "$accountData::$addressPassPhrase")
   }
 
   override fun close() { webSocket?.close(1000, "Transport is closing") }

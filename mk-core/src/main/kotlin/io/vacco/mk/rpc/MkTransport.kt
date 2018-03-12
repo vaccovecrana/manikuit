@@ -25,8 +25,8 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getBlock(height: Long): MkBlockSummary
   abstract fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail
   abstract fun getChainType(): MkAccount.Crypto
-  abstract fun doCreate(): Pair<MkAccount, String>
-  abstract fun getUrl(account: MkAccount): String
+  abstract fun doCreate(): Pair<String, String>
+  abstract fun getUrl(payment: MkPaymentDetail): String
   abstract fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal)
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
@@ -39,12 +39,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   fun create(): MkAccount {
     val pData = doCreate()
-    val key = GcmCrypto.generateKey(256)
-    val encoded = GcmCrypto.encryptGcm(pData.second.toByteArray(), key)
-    return pData.first
-        .withCipherText(Base64.getEncoder().encodeToString(encoded.ciphertext))
-        .withIv(Base64.getEncoder().encodeToString(encoded.iv))
-        .withGcmKey(Base64.getEncoder().encodeToString(key))
+    return encodeRaw(pData.first, pData.second)
   }
 
   fun decode(account: MkAccount): String {
@@ -56,6 +51,20 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         Ciphertext(dec.decode(account.cipherText),
             dec.decode(account.iv)), dec.decode(account.gcmKey)),
         Charsets.UTF_8)
+  }
+
+  fun encodeRaw(address: String, pData: String): MkAccount {
+    requireNotNull(address)
+    requireNotNull(pData)
+    val key = GcmCrypto.generateKey(256)
+    val encoded = GcmCrypto.encryptGcm(pData.toByteArray(), key)
+    val b64Enc = Base64.getEncoder()
+    return MkAccount()
+        .withCrypto(getChainType())
+        .withAddress(address)
+        .withGcmKey(b64Enc.encodeToString(encoded.iv))
+        .withCipherText(b64Enc.encodeToString(encoded.ciphertext))
+        .withIv(b64Enc.encodeToString(key))
   }
 
   override fun update() {
@@ -81,8 +90,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   override fun purge() = blockCache.purge(blockCacheCutOffSec(), getChainType())
 
-  fun getPaymentsFor(address: String): List<MkPaymentRecord> =
-      blockCache.getPaymentsFor(address, getChainType())
+  fun getPaymentsFor(address: String): List<MkPaymentRecord> = blockCache.getPaymentsFor(address, getChainType())
 
   fun getStatus(payment: MkPaymentRecord, currentBlockHeight: Long): MkPaymentRecord.Status {
     return if (getBlockDelta(payment, currentBlockHeight) >= config.confirmationThreshold)
@@ -93,9 +101,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     return currentBlockHeight - payment.blockHeight
   }
 
-  private fun blockScanCutOffSec(): Long =
-      nowUtcSecMinus(config.blockScanLimit, config.blockScanLimitUnit)
-
+  private fun blockScanCutOffSec(): Long = nowUtcSecMinus(config.blockScanLimit, config.blockScanLimitUnit)
   private fun blockCacheCutOffSec(): Long =
       nowUtcSecMinus(config.blockCacheLimit, ChronoUnit.valueOf(config.blockCacheLimitUnit.toString()))
 

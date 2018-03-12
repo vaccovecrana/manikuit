@@ -9,7 +9,7 @@ class Ciphertext(val ciphertext: ByteArray, val iv: ByteArray)
 
 object GcmCrypto {
 
-  val secureRandom = SecureRandom()
+  private val secureRandom = SecureRandom()
 
   /**
    * Generates a key with [sizeInBits] bits.
@@ -23,7 +23,7 @@ object GcmCrypto {
   /**
    * Generates a nonce for GCM mode. The nonce is always 96 bit long.
    */
-  fun generateNonce(): ByteArray {
+  private fun generateNonce(): ByteArray {
     val result = ByteArray(96 / 8)
     secureRandom.nextBytes(result)
     return result

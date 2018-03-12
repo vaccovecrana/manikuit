@@ -9,11 +9,7 @@
       "type": "string", "minLength": 16, "maxLength": 2048
     },
     "iv": {"type": "string", "maxLength": 256},
-    "gcmKey": {"type": "string", "maxLength": 256},
-    "txId": {"$ref": "schema-types.json#/txHash"},
-    "amount": {"$ref": "schema-types.json#/encodedAmount"},
-    "status": {"$ref": "schema-types.json#/paymentStatus"},
-    "confirmations": {"$ref": "schema-types.json#/txConfirmationCount"}
+    "gcmKey": {"type": "string", "maxLength": 256}
   },
   "type": "object"
 }
