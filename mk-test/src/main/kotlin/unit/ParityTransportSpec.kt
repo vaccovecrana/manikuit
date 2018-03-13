@@ -2,20 +2,17 @@ package unit
 
 import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory
 import com.onyx.persistence.manager.PersistenceManager
-import com.onyx.persistence.query.from
-import com.onyx.persistence.query.gte
-import io.vacco.mk.base.MkAccount
+import com.onyx.persistence.query.*
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.rpc.ParityTransport
 import io.vacco.mk.storage.MkBlockCache
-import j8spec.J8Spec
+import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
 import org.junit.Assert.*
 import org.junit.runner.RunWith
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.*
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
@@ -33,7 +30,7 @@ class ParityTransportSpec {
   private var testAddress: String? = null
 
   init {
-    J8Spec.beforeAll {
+    beforeAll {
       factory.initialize()
       manager = factory.persistenceManager
       val cfg = MkConfig(12,
@@ -42,8 +39,8 @@ class ParityTransportSpec {
       cfg.rootUrl = "http://127.0.0.1:8545"
       eth = ParityTransport(cfg, MkBlockCache(manager!!))
     }
-    J8Spec.it("Can update the ETH cache.") { eth!!.update() }
-    J8Spec.it("Can find transactions recorded in the last 60 minutes.") {
+    it("Can update the ETH cache.") { eth!!.update() }
+    it("Can find transactions recorded in the last 60 minutes.") {
       val utc15MinAgo = eth!!.nowUtcSecMinus(60, ChronoUnit.MINUTES)
       val tx = manager!!.from(MkPaymentRecord::class)
           .where("timeUtcSec" gte utc15MinAgo)
@@ -51,7 +48,7 @@ class ParityTransportSpec {
       assertTrue(tx.isNotEmpty())
       tx40Min.addAll(tx)
     }
-    J8Spec.it("Can map all transactions to their corresponding status, according to the latest block height.") {
+    it("Can map all transactions to their corresponding status, according to the latest block height.") {
       val blockNow = eth!!.getLatestBlockNumber()
       tx40MinWithStatus.addAll(tx40Min.map { payment ->
         Pair(payment, eth!!.getStatus(payment, blockNow))
@@ -68,22 +65,26 @@ class ParityTransportSpec {
       testAddress = tx40Min[0].address
       assertNotNull(testAddress)
     }
-    J8Spec.it("Can get all transactions for a particular address.") {
+    it("Can get all transactions for a particular address.") {
       val addrTx = eth!!.getPaymentsFor(testAddress!!)
       assertTrue(addrTx.isNotEmpty())
     }
-    J8Spec.it("Can purge the cache for records older than 5 seconds.") {
+    it("Can purge the cache for records older than 5 seconds.") {
       eth!!.purge()
       val tx = manager!!.from(MkPaymentRecord::class).list<MkPaymentRecord>()
       assertTrue(tx.isEmpty())
     }
-    J8Spec.it("Can create a new payment, along with a backing account.") {
+    it("Can create a new payment, along with a backing account.") {
       val payment = eth!!.create()
       assertNotNull(payment)
       assertNotNull(payment.gcmKey)
       val keyData = eth!!.decode(payment)
       assertNotNull(keyData)
       log.info(keyData)
+    }
+    it("Opens a new websocket Parity connection and processes incoming messages") {
+      Thread.sleep(80000)
+      eth?.close()
     }
   }
 }

@@ -95,5 +95,9 @@ class BitcoindTransportSpec {
       val tx = manager!!.from(MkPaymentRecord::class).list<MkPaymentRecord>()
       assertTrue(tx.isEmpty())
     }
+    it("Opens an IPC socket, listens and forwards messages.") {
+      Thread.sleep(240_000)
+      btc?.close()
+    }
   }
 }
