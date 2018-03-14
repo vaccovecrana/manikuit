@@ -41,10 +41,6 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
   override fun getUrl(payment: MkPaymentDetail): String = payment.account.address
   override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
 
-  override fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
-
-  }
-
   override fun getBlock(height: Long): MkBlockSummary {
     val ethBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
         "0x${java.lang.Long.toHexString(height)}", false).second

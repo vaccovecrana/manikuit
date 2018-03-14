@@ -11,6 +11,7 @@ import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
 import j8spec.J8Spec.*
 import org.slf4j.*
+import org.junit.Assert.*
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
@@ -18,20 +19,21 @@ import java.util.concurrent.TimeUnit
 @RunWith(J8SpecRunner::class)
 class BitcoindTransferSpec {
 
-  private val log: Logger = LoggerFactory.getLogger(this.javaClass)
+  private val log: Logger = LoggerFactory.getLogger(javaClass)
 
   private val factory = EmbeddedPersistenceManagerFactory("/tmp/${this.javaClass.simpleName}")
   private var manager: PersistenceManager? = null
   private var btc: BitcoindTransport? = null
 
-  private val seedAddress = MkAccount(
-      MkExchangeRate.Crypto.BTC,
-      "mxm1LEvPouNepgHynTsggu88pP1q1SNSTZ",
-      "qUGEUl9g9qYkGtYviPPXRIZ0YJLa0pigU+q2lmuiEhRx3Au0zUStzmYnr5+h7AwqG0UrEgPgBzXJsGFyBRH++LO7QRU=",
-      "mjIDe9MAUVt58Gng", System.getProperty("manikuit.test.seedGcmKey")
-  ) // the seed address must contain at least 1BTC.
-
-  private var oneToOneTarget: MkAccount? = null
+  private var oneToOneTarget: MkAccount? = MkAccount(
+      crypto=MkExchangeRate.Crypto.BTC,
+      address="misV7bW9EM67X3r8ENv7hYnsk2eppvQxf6",
+      cipherText="9Co61QQGLc6eYGkI+CVcB3B7wObPXlF6Pkw2mLPAk5LlTlAQ086z2IiY6zVJ1oyOTzfwM7/1Y3UqGCtlXmP4L7i6xrI=",
+      iv="xfj7HcNoKU45TvO3",
+      gcmKey="UpNq7gNLhPfqzT7e+S3axHTLYZnHoOo4fplf8dWBAIk="
+  )
+  private val seedAmount = "0.03000000"
+  private var seedPayment: MkPaymentRecord? = null
 
   init {
     beforeAll {
@@ -45,11 +47,21 @@ class BitcoindTransferSpec {
       cfg.connectionPoolSize = 8
       btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
     }
-    it("Transfers 0.1 BTC to a new account (1 to 1 transfer)") {
-      oneToOneTarget = btc!!.create()
-      val paymentIn = MkPaymentDetail(seedAddress, MkPaymentRecord("lol", MkExchangeRate.Crypto.BTC,
-          seedAddress.address, "0123456789ABC", "0.01", 0, 0))
-
+    it("Transfers 0.01 BTC to a new account (1 to 1 transfer)") {
+      // oneToOneTarget = btc!!.create()
+      ProcessBuilder("/bin/bash", "-c",
+          "qrencode -o - bitcoin:${oneToOneTarget!!.address}?amount=${seedAmount} | open -f -a preview"
+      ).start()
+      btc!!.update()
+      log.info("Send me coin! :D")
+      while (true) {
+        print(".")
+        seedPayment = btc!!.getPaymentsFor(oneToOneTarget!!.address).firstOrNull { it.amount == seedAmount }
+        if (seedPayment != null) break
+        Thread.sleep(60_000)
+      }
+      println()
+      assertNotNull(seedPayment)
     }
   }
 }

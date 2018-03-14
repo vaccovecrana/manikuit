@@ -35,11 +35,6 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
   override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
-  override fun submitTransfer(payments: Collection<MkPaymentDetail>,
-                              targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
-
-  }
-
   override fun getBlock(height: Long): MkBlockSummary {
     val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
     val btcBlock = getBtcBlock(btcBlockHash)

@@ -27,7 +27,6 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail
   abstract fun getChainType(): MkExchangeRate.Crypto
   abstract fun getUrl(payment: MkPaymentDetail): String
-  abstract fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal)
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
 
@@ -64,6 +63,11 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         b64Enc.encodeToString(key))
     if (log.isTraceEnabled) log.trace(account.toString())
     return account
+  }
+
+  fun submitTransfer(payments: Collection<MkPaymentDetail>,
+                     targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
+
   }
 
   override fun update() {
