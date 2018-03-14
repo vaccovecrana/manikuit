@@ -29,7 +29,7 @@ class PersistenceSpec {
       val r0 = MkPaymentRecord(
           address = address, amount = "0.001",
           txId = txId, blockHeight = 123456,
-          type = MkAccount.Crypto.ETH)
+          type = MkExchangeRate.Crypto.ETH)
       val r1 = manager!!.saveEntity(r0)
       assertEquals(r1.txId, r0.txId)
       val r2: MkPaymentRecord = manager!!
@@ -43,7 +43,7 @@ class PersistenceSpec {
       val b0 = MkBlock(
           id = bid, height = 1,
           hash = "BLOCKLOL12344", timeUtcSec = 1234567890,
-          type = MkAccount.Crypto.ETH)
+          type = MkExchangeRate.Crypto.ETH)
       val b1 = manager!!.saveEntity(b0)
       assertEquals(b0.id, b1.id)
       val b2: MkBlock = manager!!

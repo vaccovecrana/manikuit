@@ -31,7 +31,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     zmqHandler = async { while (true) { onZmqMessage(ZMsg.recvMsg(zmqClient)) } }
   }
 
-  override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.BTC
+  override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.BTC
   override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
@@ -44,7 +44,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
     val btcBlock = getBtcBlock(btcBlockHash)
     return Pair(MkBlock(height = height, timeUtcSec = btcBlock.time,
-        hash = btcBlockHash, type = MkAccount.Crypto.BTC), btcBlock.tx.toList())
+        hash = btcBlockHash, type = MkExchangeRate.Crypto.BTC), btcBlock.tx.toList())
   }
 
   override fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
@@ -60,7 +60,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
           .filter { txout -> txout.second.scriptPubKey.addresses.isNotEmpty() }
           .flatMap { txout -> txout.second.scriptPubKey.addresses.map { addr -> BtcAddrOut(txout, addr) } }
           .map { addrOut -> MkPaymentRecord(
-              type = MkAccount.Crypto.BTC, address = addrOut.second,
+              type = MkExchangeRate.Crypto.BTC, address = addrOut.second,
               txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
               blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
               timeUtcSec = addrOut.first.first.time)

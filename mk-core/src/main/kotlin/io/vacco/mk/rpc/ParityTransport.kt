@@ -37,7 +37,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
         }
       })
 
-  override fun getChainType(): MkAccount.Crypto = MkAccount.Crypto.ETH
+  override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.ETH
   override fun getUrl(payment: MkPaymentDetail): String = payment.account.address
   override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
 
@@ -50,7 +50,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
         "0x${java.lang.Long.toHexString(height)}", false).second
     return MkBlockSummary(MkBlock(
         height = height, timeUtcSec = decodeLong(ethBlock.timestamp),
-        hash = ethBlock.hash, type = MkAccount.Crypto.ETH
+        hash = ethBlock.hash, type = MkExchangeRate.Crypto.ETH
     ), ethBlock.transactions)
   }
 
@@ -61,7 +61,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeWei(tx.value) != BigInteger.ZERO }
         .map { tx -> MkPaymentRecord(
-              type = MkAccount.Crypto.ETH, address = tx.to,
+              type = MkExchangeRate.Crypto.ETH, address = tx.to,
               txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
               outputIdx = 0, timeUtcSec = summary.first.timeUtcSec
           ) }

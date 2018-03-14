@@ -19,7 +19,7 @@ class MkBlockCache(private val manager: PersistenceManager) {
   fun storeBlock(block: MkBlock) = manager.saveEntity(block.copy(
       id = MurmurHash3.apply(block.height, block.hash, block.type)))
 
-  fun getLatestLocalBlockFor(type: MkAccount.Crypto): Long {
+  fun getLatestLocalBlockFor(type: MkExchangeRate.Crypto): Long {
     val maxCol = max("height")
     val row: Map<String, Any> = manager.select(maxCol)
         .from(MkBlock::class).where("type" eq type).first()
@@ -27,13 +27,13 @@ class MkBlockCache(private val manager: PersistenceManager) {
     return result ?: 0
   }
 
-  fun getPaymentsFor(address: String, type: MkAccount.Crypto): List<MkPaymentRecord> {
+  fun getPaymentsFor(address: String, type: MkExchangeRate.Crypto): List<MkPaymentRecord> {
     return manager.from(MkPaymentRecord::class)
         .where("address" eq address)
         .and("type" eq type).lazy()
   }
 
-  fun purge(cacheLimit: Long, type: MkAccount.Crypto) {
+  fun purge(cacheLimit: Long, type: MkExchangeRate.Crypto) {
     val purgedPayments = manager.from(MkPaymentRecord::class)
         .where("type" eq type)
         .and("timeUtcSec" lte cacheLimit).delete()

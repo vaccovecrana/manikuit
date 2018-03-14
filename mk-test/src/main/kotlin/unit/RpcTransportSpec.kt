@@ -33,7 +33,7 @@ class RpcTransportSpec {
       assertFalse(transport!!.currentRates.isEmpty())
     }
     it("Can load exchange rate for BTC/USD.") {
-      val xr = transport!!.getExchangeRateFor(MkAccount.Crypto.BTC, "USD")
+      val xr = transport!!.getExchangeRateFor(MkExchangeRate.Crypto.BTC, "USD")
       assertNotNull(xr)
     }
     it("Can load the latest recommended BTC transaction fees.") {

@@ -21,11 +21,11 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
 
+  abstract fun doCreate(): Pair<String, String>
   abstract fun getLatestBlockNumber(): Long
   abstract fun getBlock(height: Long): MkBlockSummary
   abstract fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail
-  abstract fun getChainType(): MkAccount.Crypto
-  abstract fun doCreate(): Pair<String, String>
+  abstract fun getChainType(): MkExchangeRate.Crypto
   abstract fun getUrl(payment: MkPaymentDetail): String
   abstract fun submitTransfer(payments: Collection<MkPaymentDetail>, targets: Collection<MkPaymentTarget>, unitFee: BigDecimal)
 
@@ -49,8 +49,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     val dec = Base64.getDecoder()
     return String(GcmCrypto.decryptGcm(
         Ciphertext(dec.decode(account.cipherText),
-            dec.decode(account.iv)), dec.decode(account.gcmKey)),
-        Charsets.UTF_8)
+            dec.decode(account.iv)), dec.decode(account.gcmKey)), Charsets.UTF_8)
   }
 
   fun encodeRaw(address: String, pData: String): MkAccount {
@@ -59,12 +58,12 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     val key = GcmCrypto.generateKey(256)
     val encoded = GcmCrypto.encryptGcm(pData.toByteArray(), key)
     val b64Enc = Base64.getEncoder()
-    return MkAccount()
-        .withCrypto(getChainType())
-        .withAddress(address)
-        .withGcmKey(b64Enc.encodeToString(key))
-        .withCipherText(b64Enc.encodeToString(encoded.ciphertext))
-        .withIv(b64Enc.encodeToString(encoded.iv))
+    val account = MkAccount(getChainType(), address,
+        b64Enc.encodeToString(encoded.ciphertext),
+        b64Enc.encodeToString(encoded.iv),
+        b64Enc.encodeToString(key))
+    if (log.isTraceEnabled) log.trace(account.toString())
+    return account
   }
 
   override fun update() {
@@ -73,7 +72,6 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     val localLatest = blockCache.getLatestLocalBlockFor(getChainType())
     val remoteLatest = getLatestBlockNumber()
     val blockSummaries = mutableListOf<MkBlockSummary>()
-
     if (remoteLatest >= localLatest) {
       var remoteStart = remoteLatest
       var blockSummary = getBlock(remoteStart)

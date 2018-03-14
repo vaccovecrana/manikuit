@@ -15,7 +15,7 @@ data class MkPaymentRecord(
 
     @Attribute(nullable = false)
     @JsonPropertyDescription("A crypto currency type.")
-    var type: MkAccount.Crypto = MkAccount.Crypto.UNKNOWN,
+    var type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN,
 
     @Index(loadFactor = 8)
     @Attribute(nullable = false)
