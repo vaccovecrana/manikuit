@@ -1,6 +1,7 @@
 package unit
 
 import io.vacco.mk.base.*
+import io.vacco.mk.util.MkSplit
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
 import j8spec.J8Spec.*

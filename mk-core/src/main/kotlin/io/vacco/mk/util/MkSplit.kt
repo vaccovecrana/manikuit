@@ -1,5 +1,6 @@
-package io.vacco.mk.base
+package io.vacco.mk.util
 
+import io.vacco.mk.base.MkPaymentTarget
 import java.math.BigDecimal
 import java.math.BigInteger
 
