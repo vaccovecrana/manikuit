@@ -14,9 +14,14 @@ import java.math.*
 class MkSplitSpec {
 
   private val log: Logger = LoggerFactory.getLogger(javaClass)
+
   private val oneBtcInSatoshi = BigInteger.valueOf(100_000_000)
   private val btcFee = BigInteger.valueOf(84_000)
   private val btcScale = 8
+
+  private val oneEthInWei = BigInteger("1000000000000000000")
+  private val ethFee = BigInteger("314159265350000")
+  private val ethScale = 18
 
   init {
     it("Cannot split funds if target percentages do not add up to one",
@@ -88,6 +93,21 @@ class MkSplitSpec {
       )
       val summedSplit = splitResult.map { tg -> tg.amount }.reduce { amt0, amt1 -> amt0.add(amt1) }
       assertEquals(oneBtcInSatoshi, summedSplit)
+      log.info(splitResult.toString())
+    }
+
+    it("Splits 1ETH in 4 equal parts, applying fees per target") {
+      val splitResult = MkSplit.apply(oneEthInWei, ethFee, ethScale,
+          MkSplit.FeeMode.PER_TARGET,
+          listOf(
+              MkPaymentTarget("00", BigDecimal.valueOf(0.25)),
+              MkPaymentTarget("01", BigDecimal.valueOf(0.25)),
+              MkPaymentTarget("02", BigDecimal.valueOf(0.25)),
+              MkPaymentTarget("03", BigDecimal.valueOf(0.25)))
+      )
+      val summedSplit = splitResult.map { tg -> tg.amount }.reduce { amt0, amt1 -> amt0.add(amt1) }
+      val sumPlusFees = summedSplit.add(ethFee.multiply(BigInteger.valueOf(4)))
+      assertEquals(oneEthInWei, sumPlusFees)
       log.info(splitResult.toString())
     }
   }
