@@ -4,6 +4,7 @@ import unit.*
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
+    MkSplitSpec::class,
     PersistenceSpec::class,
     RpcTransportSpec::class,
     BitcoindTransportSpec::class,
