@@ -26,6 +26,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getBlock(height: Long): MkBlockSummary
   abstract fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail
   abstract fun getChainType(): MkExchangeRate.Crypto
+  abstract fun getCoinPrecision(): Int
   abstract fun getUrl(payment: MkPaymentDetail): String
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}

@@ -10,9 +10,6 @@ import java.util.*
 
 class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(config, blockCache) {
 
-  private val weiSize = 18
-  private val roundHalfEven = RoundingMode.HALF_EVEN
-  private val ethFactor = bd18(BigInteger.valueOf(10).pow(weiSize))
   private var webSocket: WebSocket? = client.newWebSocket(Request.Builder().url(config.pubSubUrl).build(),
       object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket?, response: Response?) {
@@ -38,6 +35,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
       })
 
   override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.ETH
+  override fun getCoinPrecision(): Int = 18
   override fun getUrl(payment: MkPaymentDetail): String = payment.account.address
   override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
 
@@ -81,9 +79,4 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
 
   private fun decodeLong(input: String): Long = java.lang.Long.decode(input)
   private fun decodeWei(hexWei: String): BigInteger = BigInteger(hexWei.replace("0x", ""), 16)
-
-  // Be careful with rounding errors in the input itself here... :/
-  fun toEther(wei: BigInteger): BigDecimal = bd18(wei).divide(ethFactor, roundHalfEven)
-  fun toWei(ether: BigDecimal): BigInteger = ether.multiply(ethFactor).setScale(weiSize, roundHalfEven).toBigInteger()
-  fun bd18(amount: BigInteger): BigDecimal = BigDecimal(amount).setScale(weiSize, roundHalfEven)
 }

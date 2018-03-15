@@ -22,6 +22,7 @@ class MkSplitSpec {
     it("Cannot split funds if target percentages do not add up to one",
         {c -> c.expected(IllegalArgumentException::class.java)}, {
       MkSplit.apply(oneBtcInSatoshi.add(btcFee), btcFee, 8,
+          MkSplit.FeeMode.PER_TRANSACTION,
           listOf(
               MkPaymentTarget("00", BigDecimal.valueOf(0.25)),
               MkPaymentTarget("01", BigDecimal.valueOf(0.25)),
@@ -31,22 +32,23 @@ class MkSplitSpec {
       )
     })
     it("Cannot split funds without split targets", {c -> c.expected(IllegalArgumentException::class.java)}, {
-      MkSplit.apply(oneBtcInSatoshi.add(btcFee), btcFee, btcScale, listOf())
+      MkSplit.apply(oneBtcInSatoshi.add(btcFee), btcFee, btcScale, MkSplit.FeeMode.PER_TRANSACTION, listOf())
     })
     it("Cannot split funds with negative amounts", {c -> c.expected(IllegalArgumentException::class.java)}, {
-      MkSplit.apply(BigInteger.ONE.negate(), btcFee, btcScale, listOf())
+      MkSplit.apply(BigInteger.ONE.negate(), btcFee, btcScale, MkSplit.FeeMode.PER_TRANSACTION, listOf())
     })
     it("Cannot split funds if the transaction fee is equal to the available funds amount",
         {c -> c.expected(IllegalArgumentException::class.java)}, {
-      MkSplit.apply(oneBtcInSatoshi, oneBtcInSatoshi, btcScale, listOf())
+      MkSplit.apply(oneBtcInSatoshi, oneBtcInSatoshi, btcScale, MkSplit.FeeMode.PER_TRANSACTION, listOf())
     })
     it("Cannot split funds if the transaction fee is higher to the available funds amount",
         {c -> c.expected(IllegalArgumentException::class.java)}, {
-      MkSplit.apply(oneBtcInSatoshi, oneBtcInSatoshi.add(btcFee), btcScale, listOf())
+      MkSplit.apply(oneBtcInSatoshi, oneBtcInSatoshi.add(btcFee), btcScale, MkSplit.FeeMode.PER_TRANSACTION, listOf())
     })
 
     it("Splits 1BTC plus miner fee in 4 equal parts") {
       val splitResult = MkSplit.apply(oneBtcInSatoshi.add(btcFee), btcFee, btcScale,
+          MkSplit.FeeMode.PER_TRANSACTION,
           listOf(
               MkPaymentTarget("00", BigDecimal.valueOf(0.25)),
               MkPaymentTarget("01", BigDecimal.valueOf(0.25)),
@@ -59,6 +61,7 @@ class MkSplitSpec {
     }
     it("Splits 1BTC without miner fee in 4 equal parts") {
       val splitResult = MkSplit.apply(oneBtcInSatoshi, btcFee, btcScale,
+          MkSplit.FeeMode.PER_TRANSACTION,
           listOf(
               MkPaymentTarget("00", BigDecimal.valueOf(0.25)),
               MkPaymentTarget("01", BigDecimal.valueOf(0.25)),
@@ -71,6 +74,7 @@ class MkSplitSpec {
     }
     it("Splits 1BTC with miner fee in uneven parts") {
       val splitResult = MkSplit.apply(oneBtcInSatoshi.add(btcFee), btcFee, btcScale,
+          MkSplit.FeeMode.PER_TRANSACTION,
           listOf(
               MkPaymentTarget("00", BigDecimal.valueOf(0.25)),
               MkPaymentTarget("01", BigDecimal.valueOf(0.25)),

@@ -32,6 +32,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
   }
 
   override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.BTC
+  override fun getCoinPrecision(): Int = 8
   override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
