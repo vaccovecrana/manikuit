@@ -4,10 +4,11 @@ import io.vacco.mk.base.*
 import io.vacco.mk.base.btc.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
+import io.vacco.mk.util.MkSplit
 import kotlinx.coroutines.experimental.*
 import org.zeromq.*
 import java.io.NotActiveException
-import java.math.BigDecimal
+import java.math.BigInteger
 import java.text.DecimalFormat
 
 typealias BtcOut = Pair<BtcTx, Vout>
@@ -33,6 +34,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
 
   override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.BTC
   override fun getCoinPrecision(): Int = 8
+  override fun getFeeSplitMode(): MkSplit.FeeMode = MkSplit.FeeMode.PER_TRANSACTION
   override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
@@ -65,9 +67,17 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     return MkBlockDetail(summary.first, tx)
   }
 
+  override fun doTransfer(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  }
+
   override fun doCreate(): Pair<String, String> {
     val address = getNewAddress()
     return Pair(address.first, address.second)
+  }
+
+  override fun decodeToUnit(rawAmount: String): BigInteger {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
   override fun close() { zmqHandler?.cancel(NotActiveException("Transport is closing")) }

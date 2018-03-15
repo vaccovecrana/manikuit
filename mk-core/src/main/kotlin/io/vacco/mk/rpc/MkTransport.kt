@@ -6,7 +6,7 @@ import io.vacco.mk.storage.MkBlockCache
 import io.vacco.mk.util.*
 import org.slf4j.*
 import java.io.Closeable
-import java.math.BigDecimal
+import java.math.BigInteger
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -21,12 +21,16 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
 
+  abstract fun decodeToUnit(rawAmount: String): BigInteger
   abstract fun doCreate(): Pair<String, String>
+  abstract fun doTransfer(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger)
+
   abstract fun getLatestBlockNumber(): Long
   abstract fun getBlock(height: Long): MkBlockSummary
   abstract fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail
   abstract fun getChainType(): MkExchangeRate.Crypto
   abstract fun getCoinPrecision(): Int
+  abstract fun getFeeSplitMode(): MkSplit.FeeMode
   abstract fun getUrl(payment: MkPaymentDetail): String
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
@@ -67,8 +71,12 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   }
 
   fun submitTransfer(payments: Collection<MkPaymentDetail>,
-                     targets: Collection<MkPaymentTarget>, unitFee: BigDecimal) {
-
+                     targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
+    payments.map { pd0 ->
+      val splitTargets = MkSplit.apply(decodeToUnit(pd0.record.amount),
+          unitFee, getCoinPrecision(), getFeeSplitMode(), targets)
+      doTransfer(pd0, splitTargets, unitFee)
+    }
   }
 
   override fun update() {

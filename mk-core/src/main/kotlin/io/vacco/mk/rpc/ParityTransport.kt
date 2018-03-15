@@ -4,6 +4,7 @@ import io.vacco.mk.base.*
 import io.vacco.mk.base.eth.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.storage.MkBlockCache
+import io.vacco.mk.util.MkSplit
 import okhttp3.*
 import java.math.*
 import java.util.*
@@ -36,6 +37,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
 
   override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.ETH
   override fun getCoinPrecision(): Int = 18
+  override fun getFeeSplitMode(): MkSplit.FeeMode = MkSplit.FeeMode.PER_TARGET
   override fun getUrl(payment: MkPaymentDetail): String = payment.account.address
   override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
 
@@ -62,6 +64,12 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     return MkBlockDetail(summary.first, tx)
   }
 
+  override fun doTransfer(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  }
+
+  override fun decodeToUnit(rawAmount: String): BigInteger = decodeWei(rawAmount)
+
   override fun doCreate(): Pair<String, String> {
     val addressPassPhrase = UUID.randomUUID().toString()
     val ethAddress = newAccount(addressPassPhrase)
@@ -71,8 +79,6 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
 
   override fun close() { webSocket?.close(1000, "Transport is closing") }
 
-  private fun netVersion(): Int = rpcRequest(Int::class.java, "net_version").second
-  private fun protocolVersion(): Int = Integer.decode(rpcRequest(String::class.java, "eth_protocolVersion").second)
   private fun newAccount(passphrase: String): String = rpcRequest(String::class.java, "personal_newAccount", passphrase).second
   private fun exportAccount(address: String, passphrase: String): Map<*, *> = rpcRequest(
       Map::class.java, "parity_exportAccount", address, passphrase).second
