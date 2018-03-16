@@ -23,7 +23,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   abstract fun decodeToUnit(rawAmount: String): BigInteger
   abstract fun doCreate(): Pair<String, String>
-  abstract fun doTransfer(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger)
+  abstract fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger)
 
   abstract fun getLatestBlockNumber(): Long
   abstract fun getBlock(height: Long): MkBlockSummary
@@ -75,7 +75,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     payments.map { pd0 ->
       val splitTargets = MkSplit.apply(decodeToUnit(pd0.record.amount),
           unitFee, getCoinPrecision(), getFeeSplitMode(), targets)
-      doTransfer(pd0, splitTargets, unitFee)
+      doBroadcast(pd0, splitTargets, unitFee)
     }
   }
 

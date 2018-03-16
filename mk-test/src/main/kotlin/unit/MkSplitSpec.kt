@@ -51,8 +51,7 @@ class MkSplitSpec {
         {c -> c.expected(IllegalArgumentException::class.java)}, {
       MkSplit.apply(oneBtcInSatoshi, oneBtcInSatoshi.add(btcFee), btcScale, MkSplit.FeeMode.PER_TRANSACTION, listOf())
     })
-
-    it("Splits 1BTC plus miner fee in 4 equal parts") {
+    it("Splits 1BTC plus miner fee in odd parts") {
       val splitResult = MkSplit.apply(oneBtcInSatoshi.add(btcFee), btcFee, btcScale,
           MkSplit.FeeMode.PER_TRANSACTION,
           listOf(
@@ -60,6 +59,18 @@ class MkSplitSpec {
               MkPaymentTarget("01", BigDecimal.valueOf(0.25)),
               MkPaymentTarget("02", BigDecimal.valueOf(0.25)),
               MkPaymentTarget("03", BigDecimal.valueOf(0.25)))
+      )
+      val summedSplit = splitResult.map { tg -> tg.amount }.reduce { amt0, amt1 -> amt0.add(amt1) }
+      assertEquals(oneBtcInSatoshi, summedSplit)
+      log.info(splitResult.toString())
+    }
+    it("Splits 1BTC plus miner fee in even parts") {
+      val splitResult = MkSplit.apply(oneBtcInSatoshi.add(btcFee), btcFee, btcScale,
+          MkSplit.FeeMode.PER_TRANSACTION,
+          listOf(
+              MkPaymentTarget("00", BigDecimal.valueOf(0.25)),
+              MkPaymentTarget("01", BigDecimal.valueOf(0.25)),
+              MkPaymentTarget("02", BigDecimal.valueOf(0.5)))
       )
       val summedSplit = splitResult.map { tg -> tg.amount }.reduce { amt0, amt1 -> amt0.add(amt1) }
       assertEquals(oneBtcInSatoshi, summedSplit)

@@ -47,7 +47,7 @@ class BitcoindTransferSpec {
       cfg.connectionPoolSize = 8
       btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
     }
-    it("Transfers 0.01 BTC to a new account (1 to 1 transfer)") {
+    it("Transfers $seedAmount BTC to a new account (1 to 1 transfer)") {
       // oneToOneTarget = btc!!.create()
       ProcessBuilder("/bin/bash", "-c",
           "qrencode -o - bitcoin:${oneToOneTarget!!.address}?amount=$seedAmount | open -f -a preview"

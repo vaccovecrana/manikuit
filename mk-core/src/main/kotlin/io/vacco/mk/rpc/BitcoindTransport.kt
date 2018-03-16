@@ -67,7 +67,8 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     return MkBlockDetail(summary.first, tx)
   }
 
-  override fun doTransfer(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
+  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
+    //source.record.
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
