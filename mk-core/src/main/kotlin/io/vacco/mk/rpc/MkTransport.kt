@@ -74,7 +74,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
                 targets: Collection<MkPaymentTarget>, unitFee: BigInteger): Map<String, MkPaymentDetail> {
     val pairs = payments.map { pd0 ->
       val splitTargets = MkSplit.apply(decodeToUnit(pd0.record.amount),
-          unitFee, getCoinPrecision(), getFeeSplitMode(), targets)
+          unitFee, getFeeSplitMode(), targets)
       val txId = doBroadcast(pd0, splitTargets, unitFee)
       (txId to pd0)
     }.toTypedArray()

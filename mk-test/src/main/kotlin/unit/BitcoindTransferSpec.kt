@@ -41,8 +41,8 @@ class BitcoindTransferSpec {
       iv="xfj7HcNoKU45TvO3",
       gcmKey="UpNq7gNLhPfqzT7e+S3axHTLYZnHoOo4fplf8dWBAIk="
   )
-  private val seedBlock = 1288137L
-  private val seedTx = "4f3492f25bfcd33e42b60e864d87791ee0473ab3048ee6826b91eda982d69606"
+  private val seedBlock = 1288402L
+  private val seedTx = "0ec55962e61a637714d8a1006d2c1392f4a71e1df0c8c39d11a51255072ce15a"
   private var seedPayment: MkPaymentRecord? = null
   private val seedAmount = "0.01800000" // BTC
 
@@ -62,32 +62,32 @@ class BitcoindTransferSpec {
       cfg.connectionPoolSize = 8
       btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
       btc!!.update()
-    }
+    }/*
     it("Seeds the BTC source account") {
       ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount!!.address}?amount=$seedAmount | open -f -a preview").start()
       log.info("Send me coin! :D")
       val payment = awaitPayment(seedAccount.address, null, seedAmount)
       awaitConfirmation(payment)
-    }
-    /*
+    }*/
     it("Splits the seed payment into 3 accounts") {
       seedPayment = btc!!.getBlockDetail(btc!!.getBlock(seedBlock)).second
           .filter { it.txId == seedTx }
           .first { it.amount == seedAmount }
       assertNotNull(seedPayment)
+      assertEquals(MkPaymentRecord.Status.COMPLETE, btc!!.getStatus(seedPayment!!, btc!!.getLatestBlockNumber()))
       targetAcct0 = btc!!.create()
       targetAcct1 = btc!!.create()
       targetAcct2 = btc!!.create()
       val statusMap = btc!!.broadcast(listOf(MkPaymentDetail(seedAccount, seedPayment!!)), listOf(
-          MkPaymentTarget(targetAcct0!!.address, BigDecimal(0.50)),
-          MkPaymentTarget(targetAcct1!!.address, BigDecimal(0.25)),
-          MkPaymentTarget(targetAcct2!!.address, BigDecimal(0.25))
+          MkPaymentTarget(targetAcct0!!.address, 30),
+          MkPaymentTarget(targetAcct1!!.address, 35),
+          MkPaymentTarget(targetAcct2!!.address, 35)
       ), BigInteger.valueOf(159_501))
       assertTrue(statusMap.isNotEmpty())
       statusMap.entries
-          .map { awaitPayment(it.value.account.address, it.key) }
+          .map { awaitPayment(it.value.account.address, it.key, null) }
           .map { awaitConfirmation(it) }
-    }*/
+    }
   }
 
   private fun awaitPayment(address: String, txId: String?, amount: String?): MkPaymentRecord {
