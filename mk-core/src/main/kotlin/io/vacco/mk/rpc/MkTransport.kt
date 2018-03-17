@@ -35,7 +35,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
 
-  protected fun newBlock(blockDetail: MkBlockDetail) = {
+  protected fun newBlock(blockDetail: MkBlockDetail) {
     blockCache.storeBlock(blockDetail.first)
     blockCache.storeRecords(blockDetail.second)
     onNewBlock(blockDetail)

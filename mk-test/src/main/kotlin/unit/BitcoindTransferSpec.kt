@@ -44,7 +44,7 @@ class BitcoindTransferSpec {
   private val seedBlock = 1288137L
   private val seedTx = "4f3492f25bfcd33e42b60e864d87791ee0473ab3048ee6826b91eda982d69606"
   private var seedPayment: MkPaymentRecord? = null
-  private val seedAmount = "0.01500000" // BTC
+  private val seedAmount = "0.01800000" // BTC
 
   private var targetAcct0: MkAccount? = null
   private var targetAcct1: MkAccount? = null
@@ -61,6 +61,7 @@ class BitcoindTransferSpec {
       cfg.password = "omglol"
       cfg.connectionPoolSize = 8
       btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
+      btc!!.update()
     }
     it("Seeds the BTC source account") {
       ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount!!.address}?amount=$seedAmount | open -f -a preview").start()
@@ -93,10 +94,11 @@ class BitcoindTransferSpec {
     var py0: MkPaymentRecord? = null
     while (true) {
       log.info("idle...")
+      val addrTx = btc!!.getPaymentsFor(address)
       if (amount == null) {
-        py0 = btc!!.getPaymentsFor(address).firstOrNull { it.txId == txId }
+        py0 = addrTx.firstOrNull { it.txId == txId }
       } else if (txId == null) {
-        py0 = btc!!.getPaymentsFor(address).firstOrNull { it.amount == amount }
+        py0 = addrTx.firstOrNull { it.amount == amount }
       }
       if (py0 != null) break
       Thread.sleep(30_000)
