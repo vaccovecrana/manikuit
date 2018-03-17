@@ -64,8 +64,8 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     return MkBlockDetail(summary.first, tx)
   }
 
-  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): String {
+    TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
   }
 
   override fun decodeToUnit(rawAmount: String): BigInteger = decodeWei(rawAmount)

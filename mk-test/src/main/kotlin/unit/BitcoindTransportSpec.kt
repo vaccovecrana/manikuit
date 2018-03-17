@@ -16,6 +16,8 @@ import io.vacco.mk.config.MkConfig
 import org.junit.Assert.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
+import java.math.BigInteger
 import java.util.concurrent.TimeUnit
 
 @DefinedOrder
@@ -44,6 +46,12 @@ class BitcoindTransportSpec {
       btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
     }
 
+    it("Can convert 84000 satoshis to BTC") {
+      val btcVal = btc!!.toBtc(BigInteger.valueOf(84_000))
+      val expectedVal = BigDecimal("0.00084")
+      assertEquals(expectedVal, btcVal)
+    }
+
     it("Can create a new payment, along with a backing account.") {
       val payment = btc!!.create()
       assertNotNull(payment)
@@ -53,13 +61,6 @@ class BitcoindTransportSpec {
       val keyData = btc!!.decode(payment)
       assertNotNull(keyData)
       log.info(keyData)
-    }
-
-    it("Can verify transaction outputs against the RPC client.") {
-      val bd0 = btc!!.getBlockDetail(btc!!.getBlock(1287687))
-      bd0.second.filter { pr -> pr.outputIdx > 2 }
-          .map { pr0 -> btc!!.getTxOut(pr0.txId, pr0.outputIdx) }
-          .forEach { txo -> log.info(txo.toString()) }
     }
 
     it("Can update the BTC cache.") { btc!!.update() }

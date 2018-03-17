@@ -8,15 +8,17 @@ import io.vacco.mk.util.MkSplit
 import kotlinx.coroutines.experimental.*
 import org.zeromq.*
 import java.io.NotActiveException
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.DecimalFormat
 
 typealias BtcOut = Pair<BtcTx, Vout>
 typealias BtcAddrOut = Pair<BtcOut, String>
 
-class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
-    MkTransport(config, blockCache) {
+class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport(config, blockCache) {
 
+  private val btcScale = 8
+  private val satoshiFactor = BigDecimal.TEN.setScale(btcScale).pow(btcScale)
   private val df: ThreadLocal<DecimalFormat> = ThreadLocal.withInitial { DecimalFormat("#0.00000000") }
   private val ctx = ZContext()
   private val zmqClient = ctx.createSocket(ZMQ.SUB)
@@ -33,7 +35,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
   }
 
   override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.BTC
-  override fun getCoinPrecision(): Int = 8
+  override fun getCoinPrecision(): Int = btcScale
   override fun getFeeSplitMode(): MkSplit.FeeMode = MkSplit.FeeMode.PER_TRANSACTION
   override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
@@ -67,9 +69,14 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     return MkBlockDetail(summary.first, tx)
   }
 
-  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
-    //source.record.
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): String {
+    requireNotNull(source)
+    requireNotNull(targets)
+    require(targets.isNotEmpty())
+    requireNotNull(unitFee)
+    val rawTx = createRawTx(source, targets)
+    val signedTx = signRawTx(source, rawTx)
+    return rpcRequest(String::class.java, "sendrawtransaction", signedTx.hex).second
   }
 
   override fun doCreate(): Pair<String, String> {
@@ -77,9 +84,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     return Pair(address.first, address.second)
   }
 
-  override fun decodeToUnit(rawAmount: String): BigInteger {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-  }
+  override fun decodeToUnit(rawAmount: String): BigInteger = toSatoshi(rawAmount)
 
   override fun close() { zmqHandler?.cancel(NotActiveException("Transport is closing")) }
 
@@ -97,11 +102,38 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache):
     return null
   }
 
-  fun getTxOut(txId: String, vout: Long): Any? {
-    try { return rpcRequest(Any::class.java, "gettxout", txId, vout) }
-    catch (e: Exception) { log.error(e.message) }
-    return null
+  private fun decodeRawTransaction(txHex: String): BtcTx {
+    val tx = rpcRequest(BtcTx::class.java, "decoderawtransaction", txHex).second
+    return tx.withHex(txHex)
   }
+
+  fun createRawTx(from: MkPaymentDetail, to: Collection<MkPaymentTarget>): BtcTx {
+    requireNotNull(from)
+    requireNotNull(to)
+    require(to.isNotEmpty())
+    val btcVin = Vin().withTxid(from.record.txId).withVout(from.record.outputIdx)
+    val targets = to.map { (it.address to toBtc(it.amount).toString()) }.toTypedArray()
+    val txHex = rpcRequest(String::class.java, "createrawtransaction", arrayOf(btcVin), mapOf(*targets)).second
+    return decodeRawTransaction(txHex)
+  }
+
+  fun signRawTx(from: MkPaymentDetail, tx: BtcTx): BtcTx {
+    requireNotNull(tx)
+    requireNotNull(tx.hex)
+    requireNotNull(from)
+    val prevTx = requireNotNull(getTransaction(from.record.txId))
+    val txo = requireNotNull(prevTx.vout.find { it.n == from.record.outputIdx })
+    val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx, txo.scriptPubKey.hex)
+    val result = rpcRequest(Map::class.java, "signrawtransaction", tx.hex,
+        arrayOf(txoParams), arrayOf(decode(from.account))).second
+    return decodeRawTransaction(result.get("hex") as String)
+  }
+
+  fun toBtc(satoshi: BigInteger): BigDecimal = satoshi.toBigDecimal()
+      .setScale(getCoinPrecision()).divide(satoshiFactor)
+
+  fun toSatoshi(btc: String): BigInteger = BigDecimal(btc)
+      .setScale(getCoinPrecision()).multiply(satoshiFactor).toBigInteger()
 
   private fun onZmqMessage(msg: ZMsg) {
     if (log.isTraceEnabled) { log.trace("Zmq frame: [$msg]") }

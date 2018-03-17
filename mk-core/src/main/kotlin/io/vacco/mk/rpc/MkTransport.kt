@@ -23,7 +23,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   abstract fun decodeToUnit(rawAmount: String): BigInteger
   abstract fun doCreate(): Pair<String, String>
-  abstract fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger)
+  abstract fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): String
 
   abstract fun getLatestBlockNumber(): Long
   abstract fun getBlock(height: Long): MkBlockSummary
@@ -70,13 +70,15 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     return account
   }
 
-  fun submitTransfer(payments: Collection<MkPaymentDetail>,
-                     targets: Collection<MkPaymentTarget>, unitFee: BigInteger) {
-    payments.map { pd0 ->
+  fun broadcast(payments: Collection<MkPaymentDetail>,
+                targets: Collection<MkPaymentTarget>, unitFee: BigInteger): Map<String, MkPaymentDetail> {
+    val pairs = payments.map { pd0 ->
       val splitTargets = MkSplit.apply(decodeToUnit(pd0.record.amount),
           unitFee, getCoinPrecision(), getFeeSplitMode(), targets)
-      doBroadcast(pd0, splitTargets, unitFee)
-    }
+      val txId = doBroadcast(pd0, splitTargets, unitFee)
+      (txId to pd0)
+    }.toTypedArray()
+    return mapOf(*pairs)
   }
 
   override fun update() {
