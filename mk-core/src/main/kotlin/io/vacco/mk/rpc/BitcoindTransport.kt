@@ -69,14 +69,16 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return MkBlockDetail(summary.first, tx)
   }
 
-  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): String {
+  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>,
+                           unitFee: BigInteger): Collection<MkPaymentTarget> {
     requireNotNull(source)
     requireNotNull(targets)
     require(targets.isNotEmpty())
     requireNotNull(unitFee)
     val rawTx = createRawTx(source, targets)
     val signedTx = signRawTx(source, rawTx)
-    return rpcRequest(String::class.java, "sendrawtransaction", signedTx.hex).second
+    val txId = rpcRequest(String::class.java, "sendrawtransaction", signedTx.hex).second
+    return targets.map { it.copy(txId = txId) }
   }
 
   override fun doCreate(): Pair<String, String> {

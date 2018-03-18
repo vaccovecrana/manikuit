@@ -36,7 +36,7 @@ open class HttpTransport(config: HttpConfig) {
   }
 
   fun postJson(path: String?, jsonPayload: String): String {
-    if (log.isTraceEnabled) { log.trace("RPC POST payload: [$jsonPayload]") }
+    if (log.isDebugEnabled) { log.debug("RPC POST payload: [$jsonPayload]") }
     return processJson(Request.Builder()
         .url(resolve(path))
         .post(RequestBody.create(MediaType.parse("application/json"), jsonPayload))
@@ -50,7 +50,7 @@ open class HttpTransport(config: HttpConfig) {
     client.newCall(r0).execute().use { response ->
       if (response.isSuccessful) {
         val json = response.body()!!.string()
-        log.trace("Response: [$json]")
+        if (log.isDebugEnabled) { log.debug("Response: [$json]") }
         return json
       }
       val errorMsg = "[${response.code()}] -> ${response.message()}"

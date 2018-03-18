@@ -10,11 +10,12 @@ class MkBlockCache(private val manager: PersistenceManager) {
 
   private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-  fun storeRecords(records: List<MkPaymentRecord>) = manager.saveEntities(
-      records.map { r0 -> r0.copy(id = MurmurHash3.apply(
-          r0.address, r0.amount, r0.blockHeight, r0.txId
-      )) }
-  )
+  fun storeRecords(records: List<MkPaymentRecord>) {
+    val hashedTxList = records.map {
+      it.copy(id = MurmurHash3.apply(it.address, it.amount, it.blockHeight, it.txId))
+    }
+    manager.saveEntities(hashedTxList)
+  }
 
   fun storeBlock(block: MkBlock) = manager.saveEntity(block.copy(
       id = MurmurHash3.apply(block.height, block.hash, block.type)))

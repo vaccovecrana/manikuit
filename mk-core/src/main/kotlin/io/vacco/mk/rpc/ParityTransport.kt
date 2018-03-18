@@ -11,24 +11,28 @@ import java.util.*
 
 class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(config, blockCache) {
 
+  private val accountDataSep = "::"
+
   private var webSocket: WebSocket? = client.newWebSocket(Request.Builder().url(config.pubSubUrl).build(),
       object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket?, response: Response?) {
           val msg = mapper.writeValueAsString(mapOf(
-              "id" to UUID.randomUUID(), "jsonrpc" to "2.0", "method" to "eth_subscribe",
-              "params" to arrayOf("logs", mapOf("fromBlock" to "latest", "toBlock" to "latest"))))
+              "id" to UUID.randomUUID(),
+              "jsonrpc" to "2.0",
+              "method" to "eth_subscribe",
+              "params" to arrayOf("newHeads")))
           webSocket!!.send(msg)
         }
         override fun onMessage(webSocket: WebSocket?, text: String?) {
+          if (log.isTraceEnabled) { log.trace("Raw WS message: [$text]") }
           val payload = mapper.readTree(text)
-          val tree = payload.path("params").path("result")
-          if (tree.isArray && tree.size() > 0) {
-            val firstTx = tree[0]
-            val blockNoStr = firstTx.path("blockNumber").asText("")
-            if (blockNoStr.isNotEmpty()) {
-              val blockNo = decodeLong(blockNoStr)
-              val blockSum = getBlock(blockNo)
-              val blockDetail = getBlockDetail(blockSum)
+          val blockHash = payload.path("params").path("result").path("hash").asText("")
+          if (blockHash != null && blockHash.isNotEmpty()) {
+            val rawBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByHash", blockHash, false).second
+            if (rawBlock.transactions.isNotEmpty()) {
+              if (log.isDebugEnabled) { log.debug("Retrieving block metadata for [$blockHash] with ${rawBlock.transactions.size} transactions") }
+              val block = getBlock(decodeLong(rawBlock.number))
+              val blockDetail = getBlockDetail(block)
               newBlock(blockDetail)
             }
           }
@@ -52,29 +56,45 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
 
   override fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
     val ethBlock = rpcRequest(EthBlockDetail::class.java, "eth_getBlockByNumber",
-        "0x${java.lang.Long.toHexString(summary.first.height)}", true).second
+        encodeLong(summary.first.height), true).second
     val tx = ethBlock.transactions
         .filter { tx -> tx.to != null }
-        .filter { tx -> decodeWei(tx.value) != BigInteger.ZERO }
+        .filter { tx -> decodeHexInt(tx.value) != BigInteger.ZERO }
         .map { tx -> MkPaymentRecord(
               type = MkExchangeRate.Crypto.ETH, address = tx.to,
               txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
-              outputIdx = 0, timeUtcSec = summary.first.timeUtcSec
-          ) }
+              outputIdx = 0, timeUtcSec = summary.first.timeUtcSec)
+        }
     return MkBlockDetail(summary.first, tx)
   }
 
-  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): String {
-    TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+  override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): Collection<MkPaymentTarget> {
+    requireNotNull(source)
+    requireNotNull(targets)
+    requireNotNull(unitFee)
+    require(targets.isNotEmpty())
+    if (!exists(source.account)) { import(source.account) }
+    return targets.map { tg0 ->
+      val rawTx = Transaction().withFrom(source.account.address).withTo(tg0.address)
+          .withGas(encodeHexInt(BigInteger.valueOf(21_000)))
+          .withGasPrice(encodeHexInt(unitFee))
+          .withValue(encodeHexInt(tg0.amount))
+      val fullTx = rpcRequest(Transaction::class.java, "parity_composeTransaction", rawTx).second
+      val accountUnlocked = rpcRequest(Boolean::class.java, "personal_unlockAccount",
+          source.account.address, decodeEntries(source.account)[1], encodeLong(5)).second // TODO parameterize unlock time amount.
+      require(accountUnlocked)
+      val txId = rpcRequest(String::class.java, "parity_postTransaction", fullTx).second
+      tg0.copy(txId = txId)
+    }
   }
 
-  override fun decodeToUnit(rawAmount: String): BigInteger = decodeWei(rawAmount)
+  override fun decodeToUnit(rawAmount: String): BigInteger = decodeHexInt(rawAmount)
 
   override fun doCreate(): Pair<String, String> {
     val addressPassPhrase = UUID.randomUUID().toString()
     val ethAddress = newAccount(addressPassPhrase)
     val accountData = mapper.writeValueAsString(exportAccount(ethAddress, addressPassPhrase))
-    return Pair(ethAddress, "$accountData::$addressPassPhrase")
+    return Pair(ethAddress, "$accountData$accountDataSep$addressPassPhrase")
   }
 
   override fun close() { webSocket?.close(1000, "Transport is closing") }
@@ -83,6 +103,27 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
   private fun exportAccount(address: String, passphrase: String): Map<*, *> = rpcRequest(
       Map::class.java, "parity_exportAccount", address, passphrase).second
 
-  private fun decodeLong(input: String): Long = java.lang.Long.decode(input)
-  private fun decodeWei(hexWei: String): BigInteger = BigInteger(hexWei.replace("0x", ""), 16)
+  private fun exists(account: MkAccount): Boolean {
+    val localAccount = rpcRequest(Array<String>::class.java, "personal_listAccounts")
+        .second.find { it == account.address }
+    return localAccount != null
+  }
+
+  private fun import(account: MkAccount): String {
+    val acctData = decodeEntries(account)
+    return rpcRequest(String::class.java, "parity_newAccountFromWallet", acctData[0], acctData[1]).second
+  }
+
+  private fun decodeEntries(account: MkAccount): Array<String> {
+    requireNotNull(account)
+    val rawData = decode(account)
+    val accountData = rawData.split(accountDataSep)
+    require(accountData.size == 2)
+    return accountData.toTypedArray()
+  }
+
+  fun decodeLong(input: String): Long = java.lang.Long.decode(input)
+  fun encodeLong(input: Long): String = "0x${java.lang.Long.toHexString(input)}"
+  fun decodeHexInt(hexInt: String): BigInteger = BigInteger(hexInt.replace("0x", ""), 16)
+  fun encodeHexInt(int: BigInteger): String = "0x${int.toString(16)}"
 }

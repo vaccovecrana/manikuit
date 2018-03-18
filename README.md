@@ -6,7 +6,7 @@ This project aims to provide a uniform interface for generating and tracking cry
 the following backends:
 
 - Bitcoin (via bitcoind).
-- Ethereum (via go-ethereum).
+- Ethereum (via parity).
 - Monero (in progress).
 
 For each backend, you must install and configure each backend package, and enable its RPC interface in order for this

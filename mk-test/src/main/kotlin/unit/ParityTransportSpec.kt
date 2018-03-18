@@ -69,11 +69,7 @@ class ParityTransportSpec {
       val addrTx = eth!!.getPaymentsFor(testAddress!!)
       assertTrue(addrTx.isNotEmpty())
     }
-    it("Can purge the cache for records older than 5 seconds.") {
-      eth!!.purge()
-      val tx = manager!!.from(MkPaymentRecord::class).list<MkPaymentRecord>()
-      assertTrue(tx.isEmpty())
-    }
+    it("Can purge the cache for records older than 5 seconds.") { eth!!.purge() }
     it("Can create a new payment, along with a backing account.") {
       val payment = eth!!.create()
       assertNotNull(payment)
@@ -83,7 +79,7 @@ class ParityTransportSpec {
       log.info(keyData)
     }
     it("Opens a new websocket Parity connection and processes incoming messages") {
-      Thread.sleep(80000)
+      Thread.sleep(80_000)
       eth?.close()
     }
   }

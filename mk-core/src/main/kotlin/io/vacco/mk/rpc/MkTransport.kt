@@ -23,7 +23,8 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   abstract fun decodeToUnit(rawAmount: String): BigInteger
   abstract fun doCreate(): Pair<String, String>
-  abstract fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): String
+  abstract fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>,
+                           unitFee: BigInteger): Collection<MkPaymentTarget>
 
   abstract fun getLatestBlockNumber(): Long
   abstract fun getBlock(height: Long): MkBlockSummary
@@ -36,9 +37,11 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
 
   protected fun newBlock(blockDetail: MkBlockDetail) {
-    blockCache.storeBlock(blockDetail.first)
-    blockCache.storeRecords(blockDetail.second)
-    onNewBlock(blockDetail)
+    if (blockDetail.second.isNotEmpty()) {
+      blockCache.storeBlock(blockDetail.first)
+      blockCache.storeRecords(blockDetail.second)
+      onNewBlock(blockDetail)
+    }
   }
 
   fun create(): MkAccount {
@@ -70,15 +73,11 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     return account
   }
 
-  fun broadcast(payments: Collection<MkPaymentDetail>,
-                targets: Collection<MkPaymentTarget>, unitFee: BigInteger): Map<String, MkPaymentDetail> {
-    val pairs = payments.map { pd0 ->
-      val splitTargets = MkSplit.apply(decodeToUnit(pd0.record.amount),
-          unitFee, getFeeSplitMode(), targets)
-      val txId = doBroadcast(pd0, splitTargets, unitFee)
-      (txId to pd0)
-    }.toTypedArray()
-    return mapOf(*pairs)
+  fun broadcast(payment: MkPaymentDetail, targets: Collection<MkPaymentTarget>,
+                unitFee: BigInteger): Collection<MkPaymentTarget> {
+    val splitTargets = MkSplit.apply(decodeToUnit(payment.record.amount),
+        unitFee, getFeeSplitMode(), targets)
+    return doBroadcast(payment, splitTargets, unitFee)
   }
 
   override fun update() {

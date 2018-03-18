@@ -3,7 +3,8 @@ package io.vacco.mk.base
 import java.math.BigInteger
 
 data class MkPaymentTarget(val address: String, val pctAmount: Long,
-                           var amount: BigInteger = BigInteger.ONE) {
+                           var amount: BigInteger = BigInteger.ONE,
+                           val txId: String? = null) {
   fun validate() {
     requireNotNull(address)
     require(pctAmount > 0)
