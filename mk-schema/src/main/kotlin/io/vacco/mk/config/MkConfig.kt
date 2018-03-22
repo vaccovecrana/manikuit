@@ -8,7 +8,7 @@ import javax.validation.constraints.DecimalMin
 /**
  * Base RPC source connection parameters.
  */
-data class MkConfig(
+open class MkConfig(
     @JsonPropertyDescription("Number of required confirmations to consider a transaction as final.")
     @DecimalMin("0")
     var confirmationThreshold: Long = 0,

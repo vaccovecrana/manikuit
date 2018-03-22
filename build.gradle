@@ -9,7 +9,7 @@ buildscript {
 subprojects {
 
   group 'io.vacco.manikuit'
-  version 0.22
+  version 0.23
 
   repositories { jcenter() }
   buildscript { repositories { jcenter() } }
@@ -22,7 +22,7 @@ subprojects {
   ext {
     slf4jVer = '1.7.25'
     validationApi = '2.0.1.Final'
-    jacksonVer = '2.9.2'
+    jacksonVer = '2.9.4'
   }
 
   task sourceJar(type: Jar, dependsOn: classes) { from sourceSets.main.allSource }

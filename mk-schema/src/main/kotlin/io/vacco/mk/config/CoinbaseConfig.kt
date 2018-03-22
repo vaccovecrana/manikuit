@@ -1,5 +1,5 @@
 package io.vacco.mk.config
 
-data class CoinbaseConfig(
+open class CoinbaseConfig(
     var exchangeRates: String = "exchange-rates"
 ): HttpConfig()
