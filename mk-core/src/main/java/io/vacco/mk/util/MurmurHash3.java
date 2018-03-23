@@ -32,7 +32,7 @@ public final class MurmurHash3 {
       byte [] raw = oraw.get();
       LongPair l0 = new LongPair();
       MurmurHash3.murmurhash3_x64_128(raw, 0, raw.length, seed, l0);
-      return String.format("%s-%s", Long.toHexString(l0.val1), Long.toHexString(l0.val2));
+      return String.format("%s%s", Long.toHexString(l0.val1), Long.toHexString(l0.val2));
     }
     return null;
   }

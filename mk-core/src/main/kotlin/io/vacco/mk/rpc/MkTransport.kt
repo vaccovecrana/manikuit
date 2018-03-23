@@ -83,13 +83,14 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   override fun update() {
     purge()
     val utcCoff = blockScanCutOffSec()
-    val localLatest = blockCache.getLatestLocalBlockFor(getChainType())
-    val remoteLatest = getLatestBlockNumber()
     val blockSummaries = mutableListOf<MkBlockSummary>()
-    if (remoteLatest >= localLatest) {
-      var remoteStart = remoteLatest
+    val localLatest = blockCache.getLatestLocalBlockFor(getChainType())
+    if (getLatestBlockNumber() >= localLatest) {
+      var remoteStart = getLatestBlockNumber()
       var blockSummary = getBlock(remoteStart)
-      while(blockSummary.first.timeUtcSec >= utcCoff) {
+      while(true) {
+        if (blockSummary.first.timeUtcSec <= utcCoff) break
+        if (blockSummary.first.height <= localLatest) break
         blockCache.storeBlock(blockSummary.first)
         blockSummaries.add(blockSummary)
         remoteStart -= 1

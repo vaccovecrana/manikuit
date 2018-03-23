@@ -34,16 +34,17 @@ class ParityTransportSpec {
       factory.initialize()
       manager = factory.persistenceManager
       val cfg = MkConfig(12,
-          1, ChronoUnit.HOURS, 60, TimeUnit.SECONDS)
+          6, ChronoUnit.HOURS, 20, TimeUnit.MINUTES)
       cfg.pubSubUrl = "ws://127.0.0.1:8546"
       cfg.rootUrl = "http://127.0.0.1:8545"
       eth = ParityTransport(cfg, MkBlockCache(manager!!))
     }
     it("Can update the ETH cache.") { eth!!.update() }
-    it("Can find transactions recorded in the last 60 minutes.") {
-      val utc15MinAgo = eth!!.nowUtcSecMinus(60, ChronoUnit.MINUTES)
+    it("Can skip ETH cache update if it's up to date.") { eth!!.update() }
+    it("Can find transactions recorded in the last 4 hours.") {
+      val utc4HrAgo = eth!!.nowUtcSecMinus(4, ChronoUnit.HOURS)
       val tx = manager!!.from(MkPaymentRecord::class)
-          .where("timeUtcSec" gte utc15MinAgo)
+          .where("timeUtcSec" gte utc4HrAgo)
           .list<MkPaymentRecord>()
       assertTrue(tx.isNotEmpty())
       tx40Min.addAll(tx)
@@ -79,7 +80,7 @@ class ParityTransportSpec {
       log.info(keyData)
     }
     it("Opens a new websocket Parity connection and processes incoming messages") {
-      Thread.sleep(80_000)
+      Thread.sleep(30_000)
       eth?.close()
     }
   }

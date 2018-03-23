@@ -9,7 +9,7 @@ import javax.validation.constraints.*
 data class MkBlock(
     @Identifier
     @Attribute(nullable = false)
-    @Size(min = 32, max = 128)
+    @Size(min = 32, max = 32)
     @JsonPropertyDescription("Internal hash/id (block no + block hash + block type).")
     var id: String = "",
 

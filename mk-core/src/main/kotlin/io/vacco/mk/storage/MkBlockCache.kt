@@ -17,14 +17,17 @@ class MkBlockCache(private val manager: PersistenceManager) {
     manager.saveEntities(hashedTxList)
   }
 
-  fun storeBlock(block: MkBlock) = manager.saveEntity(block.copy(
-      id = MurmurHash3.apply(block.height, block.hash, block.type)))
+  fun storeBlock(block: MkBlock) {
+    val b0 = block.copy(id = MurmurHash3.apply(block.height, block.hash, block.type))
+    manager.saveEntity(b0)
+  }
 
   fun getLatestLocalBlockFor(type: MkExchangeRate.Crypto): Long {
     val maxCol = max("height")
-    val row: Map<String, Any> = manager.select(maxCol)
-        .from(MkBlock::class).where("type" eq type).first()
-    val result: Long? = row[maxCol] as Long?
+    val row = manager.select(maxCol)
+        .from(MkBlock::class).where("type" eq type)
+        .first<Map<String, Long>>()
+    val result = row[maxCol]
     return result ?: 0
   }
 
