@@ -61,7 +61,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeHexInt(tx.value) != BigInteger.ZERO }
         .map { tx -> MkPaymentRecord(
-              type = MkExchangeRate.Crypto.ETH, address = tx.to,
+              type = MkExchangeRate.Crypto.ETH, address = tx.to!!,
               txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
               outputIdx = 0, timeUtcSec = summary.first.timeUtcSec)
         }
@@ -75,10 +75,9 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     require(targets.isNotEmpty())
     if (!exists(source.account)) { import(source.account) }
     return targets.map { tg0 ->
-      val rawTx = Transaction().withFrom(source.account.address).withTo(tg0.address)
-          .withGas(encodeHexInt(BigInteger.valueOf(21_000)))
-          .withGasPrice(encodeHexInt(unitFee))
-          .withValue(encodeHexInt(tg0.amount))
+      val rawTx = Transaction(from = source.account.address, to = tg0.address,
+          gas = encodeHexInt(BigInteger.valueOf(21_000)),
+          gasPrice = encodeHexInt(unitFee), value = encodeHexInt(tg0.amount))
       val fullTx = rpcRequest(Transaction::class.java, "parity_composeTransaction", rawTx).second
       val accountUnlocked = rpcRequest(Boolean::class.java, "personal_unlockAccount",
           source.account.address, decodeEntries(source.account)[1], encodeLong(5)).second // TODO parameterize unlock time amount.

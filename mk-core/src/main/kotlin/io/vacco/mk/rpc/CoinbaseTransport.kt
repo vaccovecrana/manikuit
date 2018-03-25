@@ -29,10 +29,7 @@ class CoinbaseTransport(private val config: CoinbaseConfig) : MkCachingTransport
     val json = getJson(config.exchangeRates, Pair("currency", cc0))
     val root = mapper.readTree(json)
     return root.path("data").path("rates").fields().asSequence().map { n0 ->
-      MkExchangeRate()
-          .withCrypto(cc0)
-          .withFiat(n0.key)
-          .withLast(n0.value.asDouble())
+      MkExchangeRate(crypto = cc0, fiat = n0.key, last = n0.value.asDouble())
     }
   }
 }

@@ -55,10 +55,10 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
           .filter { tx -> tx!!.vout.isNotEmpty() }
           .flatMap { tx -> tx!!.vout.map { out -> BtcOut(tx, out) } }
           .filter { txout -> txout.second.value > 0 }
-          .filter { txout -> txout.second.scriptPubKey != null }
           .filter { txout -> txout.second.scriptPubKey.reqSigs > 0 }
-          .filter { txout -> txout.second.scriptPubKey.addresses.isNotEmpty() }
-          .flatMap { txout -> txout.second.scriptPubKey.addresses.map { addr -> BtcAddrOut(txout, addr) } }
+          .filter { txout -> txout.second.scriptPubKey.addresses != null }
+          .filter { txout -> txout.second.scriptPubKey.addresses!!.isNotEmpty() }
+          .flatMap { txout -> txout.second.scriptPubKey.addresses!!.map { addr -> BtcAddrOut(txout, addr) } }
           .map { addrOut -> MkPaymentRecord(
               type = MkExchangeRate.Crypto.BTC, address = addrOut.second,
               txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
@@ -106,14 +106,14 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   private fun decodeRawTransaction(txHex: String): BtcTx {
     val tx = rpcRequest(BtcTx::class.java, "decoderawtransaction", txHex).second
-    return tx.withHex(txHex)
+    return tx.copy(hex = txHex)
   }
 
   fun createRawTx(from: MkPaymentDetail, to: Collection<MkPaymentTarget>): BtcTx {
     requireNotNull(from)
     requireNotNull(to)
     require(to.isNotEmpty())
-    val btcVin = Vin().withTxid(from.record.txId).withVout(from.record.outputIdx)
+    val btcVin = Vin(txid = from.record.txId, vout = from.record.outputIdx)
     val targets = to.map { (it.address to toBtc(it.amount).toString()) }.toTypedArray()
     val txHex = rpcRequest(String::class.java, "createrawtransaction", arrayOf(btcVin), mapOf(*targets)).second
     return decodeRawTransaction(txHex)

@@ -1,26 +1,8 @@
-buildscript {
-  dependencies { classpath 'org.jsonschema2pojo:jsonschema2pojo-gradle-plugin:0.5.1' }
-}
-
 plugins { id "com.jfrog.bintray" version "1.8.0" }
-apply plugin: 'jsonschema2pojo'
 
 dependencies {
   compile "javax.validation:validation-api:${validationApi}"
   compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVer}"
-}
-
-jsonSchema2Pojo {
-  dateTimeType = 'java.time.LocalDateTime'
-  generateBuilders = true
-  includeHashcodeAndEquals = false
-  includeToString = false
-  includeAdditionalProperties = true
-  includeJsr303Annotations = true
-  usePrimitives = true
-  useLongIntegers = true
-  targetPackage = 'io.vacco.mk.base'
-  annotationStyle = 'jackson2'
 }
 
 // TODO remove this when https://github.com/bintray/gradle-bintray-plugin/issues/104 is resolved.

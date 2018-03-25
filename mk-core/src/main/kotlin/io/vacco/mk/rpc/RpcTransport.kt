@@ -16,16 +16,16 @@ open class RpcTransport(config: HttpConfig) : HttpTransport(config) {
 
   protected fun <T> rpcRequest(target: Class<T>, method: String, vararg params: Any): Pair<RpcResponse, T> {
     try {
-      var r0 = RpcRequest().withId(UUID.randomUUID().toString()).withMethod(requireNotNull(method))
-      if (params.isNotEmpty()) { r0 = r0.withParams(Arrays.asList(*params)) }
+      var r0 = RpcRequest(id = UUID.randomUUID().toString(), method = requireNotNull(method))
+      if (params.isNotEmpty()) { r0 = r0.copy(params = Arrays.asList(*params)) }
       val rJson = mapper.writeValueAsString(r0)
       val rs0 = mapper.readValue(postJson(rJson), RpcResponse::class.java)
-      if (rs0.error != null) { throw IOException(rs0.error.message) }
+      if (rs0.error != null) { throw IOException(rs0.error!!.message) }
       return getResult(rs0, target)
     } catch (e: Exception) { throw IllegalStateException(e) }
   }
 
-  private fun <R : RpcResponse, T> getResult(response: R, target: Class<T>): Pair<R, T> {
+  private fun <T> getResult(response: RpcResponse, target: Class<T>): Pair<RpcResponse, T> {
     try {
       requireNotNull(response)
       var rawResult = response.result
