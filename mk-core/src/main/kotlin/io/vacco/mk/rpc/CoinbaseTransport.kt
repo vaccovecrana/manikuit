@@ -9,7 +9,7 @@ class CoinbaseTransport(private val config: CoinbaseConfig) : MkCachingTransport
 
   fun getExchangeRateFor(type: MkExchangeRate.Crypto,
                          fiatCurrency: String): MkExchangeRate? {
-    requireNotNull(type) // TODO optimize this with caching.
+    requireNotNull(type)
     requireNotNull(fiatCurrency)
     return currentRates
         .filter { ex0 -> ex0.crypto == type }

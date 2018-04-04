@@ -28,14 +28,14 @@ class BitcoindTransferSpec {
   private var btc: BitcoindTransport? = null
 
   /*
-  MkAccount(crypto=btc, address=mow3ZN6g9QqVkVEQnnk8QFBhy9J5qPgZez, cipherText=U1gg/8CBQW6qoFGwkBgcXB0qV9jV3mnOVsNchhYGB79tHUU3uzv5mV9mA6dz0m//fbMpWFI4WvdiNxl31k6YrTsprXs=, iv=wqfNAu6gTbIDGJJA, gcmKey=dh4KMI5TcLGgPF9uq25WnOpDenm6JrAqJ8UjhG8iW8g=)
-  MkAccount(crypto=btc, address=msGqgEUjoMdWVcPXQNHdi14LQqEPyvEmJx, cipherText=+tDvYmSUsdjQkPtt4DzfxaXw/XH00H3+BiynngiC24AtBGOCvs5Ec79IoiN11JyW4hbWc1SYwOKDgtiFL+uwBvOlA2k=, iv=8C5iRg0saTNXE5DQ, gcmKey=y06sW7mmubQBCVrelPXDEwAOJIuLEReg4qsEOFsERug=)
-  MkAccount(crypto=btc, address=n3cPjudEELsUqTQCzzwSPyvMwk9JZuxBZx, cipherText=m0M5rgk2Kh7krN+H0ADJx3rihmLuws4SfBSdwhoNhEyHF/iWzPh7sw/uyo6LGdFZGw0jSpcKLQJbhpd4mq84cegAp1o=, iv=bQnikyrOtasIhGhG, gcmKey=O7XasO1hyT4YM3nKenR4MpELQZG5KhQ+4Zd+/aL/mgY=)
+  MkAccount(type=btc, address=mow3ZN6g9QqVkVEQnnk8QFBhy9J5qPgZez, cipherText=U1gg/8CBQW6qoFGwkBgcXB0qV9jV3mnOVsNchhYGB79tHUU3uzv5mV9mA6dz0m//fbMpWFI4WvdiNxl31k6YrTsprXs=, iv=wqfNAu6gTbIDGJJA, gcmKey=dh4KMI5TcLGgPF9uq25WnOpDenm6JrAqJ8UjhG8iW8g=)
+  MkAccount(type=btc, address=msGqgEUjoMdWVcPXQNHdi14LQqEPyvEmJx, cipherText=+tDvYmSUsdjQkPtt4DzfxaXw/XH00H3+BiynngiC24AtBGOCvs5Ec79IoiN11JyW4hbWc1SYwOKDgtiFL+uwBvOlA2k=, iv=8C5iRg0saTNXE5DQ, gcmKey=y06sW7mmubQBCVrelPXDEwAOJIuLEReg4qsEOFsERug=)
+  MkAccount(type=btc, address=n3cPjudEELsUqTQCzzwSPyvMwk9JZuxBZx, cipherText=m0M5rgk2Kh7krN+H0ADJx3rihmLuws4SfBSdwhoNhEyHF/iWzPh7sw/uyo6LGdFZGw0jSpcKLQJbhpd4mq84cegAp1o=, iv=bQnikyrOtasIhGhG, gcmKey=O7XasO1hyT4YM3nKenR4MpELQZG5KhQ+4Zd+/aL/mgY=)
    */
 
   // Update these as testnet coins get transferred/depleted
   private var seedAccount = MkAccount(
-      crypto=MkExchangeRate.Crypto.BTC,
+      type=MkExchangeRate.Crypto.BTC,
       address="misV7bW9EM67X3r8ENv7hYnsk2eppvQxf6",
       cipherText="9Co61QQGLc6eYGkI+CVcB3B7wObPXlF6Pkw2mLPAk5LlTlAQ086z2IiY6zVJ1oyOTzfwM7/1Y3UqGCtlXmP4L7i6xrI=",
       iv="xfj7HcNoKU45TvO3", gcmKey="UpNq7gNLhPfqzT7e+S3axHTLYZnHoOo4fplf8dWBAIk="

@@ -30,7 +30,7 @@ class ParityTransferSpec {
 
   // Update these as Kovan testnet ether gets transferred/depleted
   private val seedAccount = MkAccount(
-      crypto = MkExchangeRate.Crypto.ETH,
+      type = MkExchangeRate.Crypto.ETH,
       address = "0x61413e53f57fbee607333704e6b110654fcfae86",
       cipherText = "kF/rvbBpNaMhcqM+2Z/foAtz3TuUCUHBBBInobw74ySyY0nY0apwRBVgk+16NHKnzSirAHspQzxPY0ozEfr8TAp7ZCTQdzYKhBkKG0x+D0Q1XcU6FaVTMwoV2rove6eFXwX0jm+og9XuixA0oQmUAUp2aeMEyyj16vCp88azQUY6fGdxwO2F6OSPdfrJSVPhmLwlpUTqSdOKUPSPstTMowSj4QugucBMeOEk5Uj6wEnZkv21Nrh3rMqa0VTGKRvM+x0VRvjixj5Pwf7xoGHPY0xZsdVOwuaH+ITFo48HH0yPk5qpFWcyKT1HPM2ny+66rNv/IYb7yBGX14i59ZMzdI6USD2a6JocdJ11uVVx6ZoHRVy42Ivgmh/4CgpBgph+4Y5hjatvYhLTDn9UpFKmHZSeeklaK2yGaOS2qK5ofmEi1qechRbJ7ud48GS7oyTrEm3CZB2q0bByenGL8oOO3/QcIVpchv8cZDgFhEm2NhTQWoeEL5t8KAXKNH4xYDaN0UHVqhETjxOzdbpRbsxOraWVrLb1Qinrqx4sG4roXARvjnDpMin2+unfClnCr/oZTCpaIxc+jNkyoqClENx2FGTmva0aJqV4u+V2NmvsYySdWq/B8sT1mH4lbxh64UN5T5ZVrw+zjhsAxHUVGm1bipGNxXv5en9QoFITiWRGj37vhb7XYDAXk2/aquxyNNnTfyWRUoHv2RQiSd1rwDG5sbNeJVSYOmUK7DOiYB03sx5TJ2nOC7CiZH5oebewPA==",
       iv = "wlxna16Djvm9nwxb", gcmKey = "3GndrdKSZ6CxXjdfDwESm6Z756Z1jzKQMmlABv4+QJ4=")
