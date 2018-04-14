@@ -23,5 +23,8 @@ open class MkConfig(
     @JsonPropertyDescription("Time limit unit type subset equivalent to {@link java.util.concurrent.TimeUnit} for keeping cached copies of blocks/transactions.")
     var blockCacheLimitUnit: TimeUnit = TimeUnit.NANOSECONDS,
     @JsonPropertyDescription("Pub/sub URI to receive implementation specific notifications from the processing daemon.")
-    var pubSubUrl: String = ""
+    var pubSubUrl: String = "",
+    @JsonPropertyDescription("Bloom filter based transaction listener capacity.")
+    @DecimalMin(value = "512")
+    var txListenerCapcity: Int = 10_000_000
 ): HttpConfig()

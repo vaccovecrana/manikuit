@@ -1,25 +1,24 @@
 package io.vacco.mk.rpc
 
+import com.ifesdjeen.blomstre.BloomFilter
 import io.vacco.mk.base.*
 import io.vacco.mk.config.MkConfig
-import io.vacco.mk.storage.MkBlockCache
+import io.vacco.mk.spi.MkBlockCache
 import io.vacco.mk.util.*
 import org.slf4j.*
 import java.io.Closeable
 import java.math.BigInteger
+import java.nio.ByteBuffer
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
+import java.util.function.Function
 
 abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlockCache):
     MkCachingTransport(config), Closeable {
 
-  init {
-    require(config.blockCacheLimit > 0)
-    require(config.blockScanLimit > 0)
-  }
-
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
+  private var txFilter: BloomFilter<MkPaymentRecord>? = null
 
   abstract fun decodeToUnit(rawAmount: String): BigInteger
   abstract fun doCreate(): Pair<String, String>
@@ -28,20 +27,58 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   abstract fun getLatestBlockNumber(): Long
   abstract fun getBlock(height: Long): MkBlockSummary
-  abstract fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail
+
+  protected abstract fun doGetBlockDetail(summary: MkBlockSummary): MkBlockDetail
+
   abstract fun getChainType(): MkExchangeRate.Crypto
   abstract fun getCoinPrecision(): Int
   abstract fun getFeeSplitMode(): MkSplit.FeeMode
   abstract fun getUrl(payment: MkPaymentDetail): String
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
+  var onPaymentMatch: (payment: MkPaymentRecord) -> Unit = {}
 
-  protected fun newBlock(blockDetail: MkBlockDetail) {
-    if (blockDetail.second.isNotEmpty()) {
-      blockCache.storeBlock(blockDetail.first)
-      blockCache.storeRecords(blockDetail.second)
-      onNewBlock(blockDetail)
+  private val fingerPrint: Function<MkPaymentRecord, ByteBuffer> = Function {
+    val data = StringBuilder().append(it.type).append(it.address).append(it.amount).toString()
+    val bytes = data.toByteArray()
+    val bb = ByteBuffer.allocateDirect(bytes.size)
+    bb.put(bytes)
+    bb
+  }
+
+  init {
+    require(config.blockCacheLimit > 0)
+    require(config.blockScanLimit > 0)
+    txFilter = BloomFilter.makeFilter(fingerPrint, config.txListenerCapcity, 0.001)
+  }
+
+  fun newBlock(blockDetail: MkBlockDetail) {
+    try {
+      if (blockDetail.second.isNotEmpty()) {
+        blockCache.storeBlock(blockDetail.first)
+        blockCache.storeRecords(blockDetail.second)
+        onNewBlock(blockDetail)
+        blockDetail.second
+            .filter { txFilter!!.isPresent(it) }
+            .forEach{ onPaymentMatch(it) }
+      }
+    } catch (e: Exception) {
+      log.error("Unable to complete new block notifications. Please verify storage/listener implementations.", e)
     }
+  }
+
+  fun notifyOn(pr: MkPaymentRecord) {
+    requireNotNull(pr.type)
+    requireNotNull(pr.address)
+    requireNotNull(pr.amount)
+    txFilter!!.add(pr)
+  }
+
+  fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
+    val bd = doGetBlockDetail(summary)
+    return bd.copy(second = bd.second.map {
+      it.copy(id = MurmurHash3.apply(it.type, it.address, it.amount, it.blockHeight, it.txId))
+    })
   }
 
   fun create(): MkAccount {
@@ -81,7 +118,6 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   }
 
   override fun update() {
-    purge()
     val utcCoff = blockScanCutOffSec()
     val blockSummaries = mutableListOf<MkBlockSummary>()
     val localLatest = blockCache.getLatestLocalBlockFor(getChainType())
@@ -97,13 +133,15 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         blockSummary = getBlock(remoteStart)
       }
     }
-    blockSummaries.asSequence().map(this::getBlockDetail).map { it.second }
+    blockSummaries.asSequence()
+        .map(this::getBlockDetail).map { it.second }
         .forEach { paymentList -> blockCache.storeRecords(paymentList) }
   }
 
   override fun purge() = blockCache.purge(blockCacheCutOffSec(), getChainType())
 
-  fun getPaymentsFor(address: String): List<MkPaymentRecord> = blockCache.getPaymentsFor(address, getChainType())
+  fun getPaymentsFor(address: String): List<MkPaymentRecord> =
+      blockCache.getPaymentsFor(address, getChainType())
 
   fun getStatus(payment: MkPaymentRecord, currentBlockHeight: Long): MkPaymentRecord.Status {
     return if (getBlockDelta(payment, currentBlockHeight) >= config.confirmationThreshold)

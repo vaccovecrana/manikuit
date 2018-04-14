@@ -3,7 +3,7 @@ package io.vacco.mk.rpc
 import io.vacco.mk.base.*
 import io.vacco.mk.base.btc.*
 import io.vacco.mk.config.MkConfig
-import io.vacco.mk.storage.MkBlockCache
+import io.vacco.mk.spi.MkBlockCache
 import io.vacco.mk.util.MkSplit
 import kotlinx.coroutines.experimental.*
 import org.zeromq.*
@@ -47,7 +47,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
         hash = btcBlockHash, type = MkExchangeRate.Crypto.BTC), btcBlock.tx.toList())
   }
 
-  override fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
+  override fun doGetBlockDetail(summary: MkBlockSummary): MkBlockDetail {
     val deferred = summary.second.map { txId -> async { getTransaction(txId) } }
     val tx = runBlocking {
       deferred.map { it.await() }

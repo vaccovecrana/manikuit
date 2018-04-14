@@ -1,20 +1,16 @@
 package unit
 
-import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory
-import com.onyx.persistence.manager.PersistenceManager
-import com.onyx.persistence.query.from
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.rpc.BitcoindTransport
-import io.vacco.mk.storage.MkBlockCache
 import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
 import java.time.temporal.ChronoUnit
-import com.onyx.persistence.query.*
 import io.vacco.mk.config.MkConfig
 import org.junit.Assert.*
 import org.slf4j.*
+import util.InMemoryBlockCache
 import java.math.*
 import java.util.concurrent.TimeUnit
 
@@ -24,24 +20,21 @@ class BitcoindTransportSpec {
 
   private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-  private val factory = EmbeddedPersistenceManagerFactory("/tmp/${this.javaClass.simpleName}")
-  private var manager: PersistenceManager? = null
   private var btc: BitcoindTransport? = null
+  private var btcCache: InMemoryBlockCache = InMemoryBlockCache()
   private val tx40Min: MutableList<MkPaymentRecord> = ArrayList()
   private val tx40MinWithStatus:MutableList<Pair<MkPaymentRecord, MkPaymentRecord.Status>> = ArrayList()
   private var testAddress: String? = null
 
   init {
     beforeAll {
-      factory.initialize()
-      manager = factory.persistenceManager
       val cfg = MkConfig(6, 2, ChronoUnit.HOURS, 10, TimeUnit.MINUTES)
       cfg.pubSubUrl = "tcp://127.0.0.1:28332"
       cfg.rootUrl = "http://127.0.0.1:18332"
       cfg.username = "gopher"
       cfg.password = "omglol"
       cfg.connectionPoolSize = 8
-      btc = BitcoindTransport(cfg, MkBlockCache(manager!!))
+      btc = BitcoindTransport(cfg, btcCache)
     }
 
     it("Can convert 84000 satoshis to BTC") {
@@ -66,9 +59,7 @@ class BitcoindTransportSpec {
 
     it("Can find transactions recorded in the last 40 minutes.") {
       val utc40MinAgo = btc!!.nowUtcSecMinus(40, ChronoUnit.MINUTES)
-      val tx = manager!!.from(MkPaymentRecord::class)
-          .where("timeUtcSec" gte utc40MinAgo)
-          .list<MkPaymentRecord>()
+      val tx = btcCache.paymentById.values.filter { it.timeUtcSec >= utc40MinAgo }
       assertTrue(tx.isNotEmpty())
       tx40Min.addAll(tx)
     }

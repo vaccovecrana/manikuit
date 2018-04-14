@@ -4,8 +4,8 @@ import unit.*
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
+    NoOpBlockCacheSpec::class,
     MkSplitSpec::class,
-    PersistenceSpec::class,
     RpcTransportSpec::class,
     BitcoindTransportSpec::class,
     ParityTransportSpec::class

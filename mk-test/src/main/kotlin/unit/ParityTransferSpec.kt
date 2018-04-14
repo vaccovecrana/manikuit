@@ -1,11 +1,8 @@
 package unit
 
-import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory
-import com.onyx.persistence.manager.PersistenceManager
 import io.vacco.mk.base.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.rpc.ParityTransport
-import io.vacco.mk.storage.MkBlockCache
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
@@ -13,6 +10,7 @@ import j8spec.J8Spec.*
 import org.junit.Assert.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import util.InMemoryBlockCache
 import util.MkPaymentUtil
 import java.math.BigInteger
 import java.time.temporal.ChronoUnit
@@ -24,8 +22,6 @@ class ParityTransferSpec {
 
   private val log: Logger = LoggerFactory.getLogger(javaClass)
 
-  private val factory = EmbeddedPersistenceManagerFactory("/tmp/${this.javaClass.simpleName}")
-  private var manager: PersistenceManager? = null
   private var eth: ParityTransport? = null
 
   // Update these as Kovan testnet ether gets transferred/depleted
@@ -48,12 +44,10 @@ class ParityTransferSpec {
 
   init {
     beforeAll {
-      factory.initialize()
-      manager = factory.persistenceManager
       val cfg = MkConfig(12, 1, ChronoUnit.HOURS, 2, TimeUnit.HOURS)
       cfg.pubSubUrl = "ws://127.0.0.1:8546"
       cfg.rootUrl = "http://127.0.0.1:8545"
-      eth = ParityTransport(cfg, MkBlockCache(manager!!))
+      eth = ParityTransport(cfg, InMemoryBlockCache())
     }/*
     it("Seeds the ETH source account") {
       // ProcessBuilder("/bin/bash", "-c", "qrencode -o - ${seedAccount.address} | open -f -a preview").start()

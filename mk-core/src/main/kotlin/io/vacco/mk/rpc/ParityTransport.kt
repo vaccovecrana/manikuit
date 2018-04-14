@@ -3,7 +3,7 @@ package io.vacco.mk.rpc
 import io.vacco.mk.base.*
 import io.vacco.mk.base.eth.*
 import io.vacco.mk.config.MkConfig
-import io.vacco.mk.storage.MkBlockCache
+import io.vacco.mk.spi.MkBlockCache
 import io.vacco.mk.util.MkSplit
 import okhttp3.*
 import java.math.*
@@ -54,16 +54,16 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     ), ethBlock.transactions)
   }
 
-  override fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
+  override fun doGetBlockDetail(summary: MkBlockSummary): MkBlockDetail {
     val ethBlock = rpcRequest(EthBlockDetail::class.java, "eth_getBlockByNumber",
         encodeLong(summary.first.height), true).second
     val tx = ethBlock.transactions
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeHexInt(tx.value) != BigInteger.ZERO }
         .map { tx -> MkPaymentRecord(
-              type = MkExchangeRate.Crypto.ETH, address = tx.to!!,
-              txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
-              outputIdx = 0, timeUtcSec = summary.first.timeUtcSec)
+            type = MkExchangeRate.Crypto.ETH, address = tx.to!!,
+            txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
+            outputIdx = 0, timeUtcSec = summary.first.timeUtcSec)
         }
     return MkBlockDetail(summary.first, tx)
   }

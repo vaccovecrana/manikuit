@@ -1,18 +1,15 @@
 package unit
 
-import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory
-import com.onyx.persistence.manager.PersistenceManager
-import com.onyx.persistence.query.*
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.rpc.ParityTransport
-import io.vacco.mk.storage.MkBlockCache
 import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
 import org.junit.Assert.*
 import org.junit.runner.RunWith
 import org.slf4j.*
+import util.InMemoryBlockCache
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
@@ -22,30 +19,25 @@ class ParityTransportSpec {
 
   private val log:Logger = LoggerFactory.getLogger(this.javaClass)
 
-  private val factory = EmbeddedPersistenceManagerFactory("/tmp/${this.javaClass.simpleName}")
-  private var manager: PersistenceManager? = null
   private var eth: ParityTransport? = null
+  private val ethCache: InMemoryBlockCache = InMemoryBlockCache()
   private val tx40Min: MutableList<MkPaymentRecord> = ArrayList()
   private val tx40MinWithStatus:MutableList<Pair<MkPaymentRecord, MkPaymentRecord.Status>> = ArrayList()
   private var testAddress: String? = null
 
   init {
     beforeAll {
-      factory.initialize()
-      manager = factory.persistenceManager
       val cfg = MkConfig(12,
           6, ChronoUnit.HOURS, 20, TimeUnit.MINUTES)
       cfg.pubSubUrl = "ws://127.0.0.1:8546"
       cfg.rootUrl = "http://127.0.0.1:8545"
-      eth = ParityTransport(cfg, MkBlockCache(manager!!))
+      eth = ParityTransport(cfg, ethCache)
     }
     it("Can update the ETH cache.") { eth!!.update() }
     it("Can skip ETH cache update if it's up to date.") { eth!!.update() }
     it("Can find transactions recorded in the last 4 hours.") {
       val utc4HrAgo = eth!!.nowUtcSecMinus(4, ChronoUnit.HOURS)
-      val tx = manager!!.from(MkPaymentRecord::class)
-          .where("timeUtcSec" gte utc4HrAgo)
-          .list<MkPaymentRecord>()
+      val tx = ethCache.paymentById.values.filter { it.timeUtcSec >= utc4HrAgo }
       assertTrue(tx.isNotEmpty())
       tx40Min.addAll(tx)
     }
@@ -66,6 +58,18 @@ class ParityTransportSpec {
       testAddress = tx40Min[0].address
       assertNotNull(testAddress)
     }
+
+    it("Creates a synthetic new block event to track specific transaction notifications.") {
+      val targetTx = tx40Min[0]
+      val block = eth!!.getBlockDetail(eth!!.getBlock(targetTx.blockHeight))
+      eth!!.notifyOn(targetTx)
+      eth!!.onPaymentMatch = {
+        log.info("New block transaction filter match: [{}]", it)
+        assertEquals(targetTx.id, it.id)
+      }
+      eth!!.newBlock(block)
+    }
+
     it("Can get all transactions for a particular address.") {
       val addrTx = eth!!.getPaymentsFor(testAddress!!)
       assertTrue(addrTx.isNotEmpty())
