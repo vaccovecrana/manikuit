@@ -41,13 +41,6 @@ data class MkPaymentRecord(
     @MtAttribute(nil = false)
     @DecimalMin("0")
     @JsonPropertyDescription("The UTC epoch timestamp of this transaction.")
-    var timeUtcSec: Long = 0,
+    var timeUtcSec: Long = 0
 
-    @MtAttribute(len = 4)
-    @JsonPropertyDescription("Optional fiat target currency symbol at the time this payment occurred.")
-    var fiatSymbol: String = "",
-
-    @MtAttribute(len = 32)
-    @JsonPropertyDescription("Optional target crypto currency unit fiat value at the time this payment occurred.")
-    var fiatFactor: String = ""
 ) { enum class Status { PENDING, COMPLETE } }
