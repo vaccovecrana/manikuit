@@ -5,7 +5,7 @@ import io.vacco.metolithe.annotations.*
 import javax.validation.constraints.*
 
 @MtEntity
-class MkAccount(
+open class MkAccount(
     @MtAttribute(nil = false, len = 32)
     @JsonProperty("type")
     @JsonPropertyDescription("A crypto currency type.") @NotNull

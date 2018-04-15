@@ -5,7 +5,7 @@ import io.vacco.metolithe.annotations.*
 import javax.validation.constraints.*
 
 @MtEntity
-class MkPaymentRecord(
+open class MkPaymentRecord(
     @MtId @MtAttribute(len = 32)
     @JsonPropertyDescription("Internal record hash.")
     var id: String = "",
