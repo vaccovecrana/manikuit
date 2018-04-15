@@ -27,7 +27,7 @@ data class MkBlock(
     @JsonPropertyDescription("Implementation specific block hash.")
     var hash: String = "",
 
-    @MtIndex @MtAttribute(nil = false)
+    @MtIndex @MtAttribute(nil = false, len = 32)
     @JsonPropertyDescription("A crypto currency type.")
     var type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN
 )
