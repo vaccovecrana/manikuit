@@ -87,6 +87,11 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     }
   }
 
+  override fun encodeAmount(amount: BigDecimal): String {
+    val wei = amount.movePointRight(18)
+    return encodeHexInt(wei.toBigInteger())
+  }
+
   override fun decodeToUnit(rawAmount: String): BigInteger = decodeHexInt(rawAmount)
 
   override fun doCreate(): Pair<String, String> {
@@ -115,7 +120,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
 
   private fun decodeEntries(account: MkAccount): Array<String> {
     requireNotNull(account)
-    val rawData = decode(account)
+    val rawData = MkAccountCodec.decode(account)
     val accountData = rawData.split(accountDataSep)
     require(accountData.size == 2)
     return accountData.toTypedArray()

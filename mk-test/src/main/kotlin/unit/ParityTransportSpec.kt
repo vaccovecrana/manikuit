@@ -2,6 +2,7 @@ package unit
 
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.config.MkConfig
+import io.vacco.mk.rpc.MkAccountCodec
 import io.vacco.mk.rpc.ParityTransport
 import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
@@ -10,6 +11,7 @@ import org.junit.Assert.*
 import org.junit.runner.RunWith
 import org.slf4j.*
 import util.InMemoryBlockCache
+import java.math.BigDecimal
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
@@ -32,6 +34,12 @@ class ParityTransportSpec {
       cfg.pubSubUrl = "ws://127.0.0.1:8546"
       cfg.rootUrl = "http://127.0.0.1:8545"
       eth = ParityTransport(cfg, ethCache)
+    }
+    it("Can encode 0.05438066 ETH as base 16 wei.") {
+      val ethAmt = BigDecimal("0.05438066").setScale(18)
+      val wei16 = eth!!.encodeAmount(ethAmt)
+      val expected = "0xC132EC11F38800".toLowerCase()
+      assertEquals(expected, wei16)
     }
     it("Can update the ETH cache.") { eth!!.update() }
     it("Can skip ETH cache update if it's up to date.") { eth!!.update() }
@@ -60,14 +68,19 @@ class ParityTransportSpec {
     }
 
     it("Creates a synthetic new block event to track specific transaction notifications.") {
-      val targetTx = tx40Min[0]
-      val block = eth!!.getBlockDetail(eth!!.getBlock(targetTx.blockHeight))
-      eth!!.notifyOn(targetTx)
-      eth!!.onPaymentMatch = {
-        log.info("New block transaction filter match: [{}]", it)
-        assertEquals(targetTx.id, it.id)
+      val tx40ByAddr = tx40Min.groupBy { it.address }
+      val addr = tx40ByAddr.keys.iterator().next()
+      val txList = tx40ByAddr[addr]
+      val firstTx = txList!![0]
+      val block = eth!!.getBlockDetail(eth!!.getBlock(firstTx.blockHeight))
+      eth!!.notifyOnAddress(firstTx)
+      val blockTx: MutableList<MkPaymentRecord> = ArrayList()
+      eth!!.onAddressMatch = {
+        log.info("New block transaction address filter match: [{}]", it)
+        blockTx.add(it)
       }
       eth!!.newBlock(block)
+      assert(blockTx.size <= txList.size)
     }
 
     it("Can get all transactions for a particular address.") {
@@ -79,7 +92,7 @@ class ParityTransportSpec {
       val payment = eth!!.create()
       assertNotNull(payment)
       assertNotNull(payment.gcmKey)
-      val keyData = eth!!.decode(payment)
+      val keyData = MkAccountCodec.decode(payment)
       assertNotNull(keyData)
       log.info(keyData)
     }

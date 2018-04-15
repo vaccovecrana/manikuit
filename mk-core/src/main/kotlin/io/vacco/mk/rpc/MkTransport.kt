@@ -7,19 +7,18 @@ import io.vacco.mk.spi.MkBlockCache
 import io.vacco.mk.util.*
 import org.slf4j.*
 import java.io.Closeable
+import java.math.BigDecimal
 import java.math.BigInteger
-import java.nio.ByteBuffer
 import java.time.*
 import java.time.temporal.ChronoUnit
-import java.util.*
-import java.util.function.Function
 
 abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlockCache):
     MkCachingTransport(config), Closeable {
 
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
-  private var txFilter: BloomFilter<MkPaymentRecord>? = null
+  private var txAddressFilter: BloomFilter<MkPaymentRecord>? = null
 
+  abstract fun encodeAmount(amount: BigDecimal): String
   abstract fun decodeToUnit(rawAmount: String): BigInteger
   abstract fun doCreate(): Pair<String, String>
   abstract fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>,
@@ -36,20 +35,13 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getUrl(payment: MkPaymentDetail): String
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
-  var onPaymentMatch: (payment: MkPaymentRecord) -> Unit = {}
-
-  private val fingerPrint: Function<MkPaymentRecord, ByteBuffer> = Function {
-    val data = StringBuilder().append(it.type).append(it.address).append(it.amount).toString()
-    val bytes = data.toByteArray()
-    val bb = ByteBuffer.allocateDirect(bytes.size)
-    bb.put(bytes)
-    bb
-  }
+  var onAddressMatch: (payment: MkPaymentRecord) -> Unit = {}
 
   init {
     require(config.blockCacheLimit > 0)
     require(config.blockScanLimit > 0)
-    txFilter = BloomFilter.makeFilter(fingerPrint, config.txListenerCapcity, 0.001)
+    txAddressFilter = BloomFilter.makeFilter(MkAccountCodec::fingerPrintAddress,
+        config.txFilterCapacity, 0.001)
   }
 
   fun newBlock(blockDetail: MkBlockDetail) {
@@ -59,19 +51,19 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         blockCache.storeRecords(blockDetail.second)
         onNewBlock(blockDetail)
         blockDetail.second
-            .filter { txFilter!!.isPresent(it) }
-            .forEach{ onPaymentMatch(it) }
+            .filter { txAddressFilter!!.isPresent(it) }
+            .forEach{ onAddressMatch(it) }
       }
     } catch (e: Exception) {
       log.error("Unable to complete new block notifications. Please verify storage/listener implementations.", e)
     }
   }
 
-  fun notifyOn(pr: MkPaymentRecord) {
+  fun notifyOnAddress(pr: MkPaymentRecord) {
     requireNotNull(pr.type)
     requireNotNull(pr.address)
-    requireNotNull(pr.amount)
-    txFilter!!.add(pr)
+    require(pr.type === getChainType())
+    txAddressFilter!!.add(pr)
   }
 
   fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
@@ -83,31 +75,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   fun create(): MkAccount {
     val pData = doCreate()
-    return encodeRaw(pData.first, pData.second)
-  }
-
-  fun decode(account: MkAccount): String {
-    requireNotNull(account.cipherText)
-    requireNotNull(account.iv)
-    requireNotNull(account.gcmKey)
-    val dec = Base64.getDecoder()
-    return String(GcmCrypto.decryptGcm(
-        Ciphertext(dec.decode(account.cipherText),
-            dec.decode(account.iv)), dec.decode(account.gcmKey)), Charsets.UTF_8)
-  }
-
-  fun encodeRaw(address: String, pData: String): MkAccount {
-    requireNotNull(address)
-    requireNotNull(pData)
-    val key = GcmCrypto.generateKey(256)
-    val encoded = GcmCrypto.encryptGcm(pData.toByteArray(), key)
-    val b64Enc = Base64.getEncoder()
-    val account = MkAccount(getChainType(), address,
-        b64Enc.encodeToString(encoded.ciphertext),
-        b64Enc.encodeToString(encoded.iv),
-        b64Enc.encodeToString(key))
-    if (log.isTraceEnabled) log.trace(account.toString())
-    return account
+    return MkAccountCodec.encodeRaw(pData.first, pData.second, getChainType())
   }
 
   fun broadcast(payment: MkPaymentDetail, targets: Collection<MkPaymentTarget>,

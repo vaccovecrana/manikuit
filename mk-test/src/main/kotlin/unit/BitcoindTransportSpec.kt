@@ -8,6 +8,7 @@ import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
 import java.time.temporal.ChronoUnit
 import io.vacco.mk.config.MkConfig
+import io.vacco.mk.rpc.MkAccountCodec
 import org.junit.Assert.*
 import org.slf4j.*
 import util.InMemoryBlockCache
@@ -42,6 +43,11 @@ class BitcoindTransportSpec {
       val expectedVal = BigDecimal("0.00084")
       assertEquals(expectedVal, btcVal)
     }
+    it("Can encode 27 USD as 0.0033 BTC (decimal satoshis)") {
+      val usdInBtc = BigDecimal("0.0033")
+      val btcSato = btc!!.encodeAmount(usdInBtc)
+      assertEquals("0.00330000", btcSato)
+    }
 
     it("Can create a new payment, along with a backing account.") {
       val payment = btc!!.create()
@@ -49,7 +55,7 @@ class BitcoindTransportSpec {
       assertNotNull(payment.cipherText)
       assertNotNull(payment.iv)
       assertNotNull(payment.gcmKey)
-      val keyData = btc!!.decode(payment)
+      val keyData = MkAccountCodec.decode(payment)
       assertNotNull(keyData)
       log.info(keyData)
     }

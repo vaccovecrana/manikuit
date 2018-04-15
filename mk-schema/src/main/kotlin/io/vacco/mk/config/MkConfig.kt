@@ -24,7 +24,7 @@ open class MkConfig(
     var blockCacheLimitUnit: TimeUnit = TimeUnit.NANOSECONDS,
     @JsonPropertyDescription("Pub/sub URI to receive implementation specific notifications from the processing daemon.")
     var pubSubUrl: String = "",
-    @JsonPropertyDescription("Bloom filter based transaction listener capacity.")
+    @JsonPropertyDescription("Bloom filter based transaction listener capacity (currently supports per-address listener filters).")
     @DecimalMin(value = "512")
-    var txListenerCapcity: Int = 10_000_000
+    var txFilterCapacity: Int = 10_000_000
 ): HttpConfig()

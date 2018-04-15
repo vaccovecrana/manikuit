@@ -10,6 +10,7 @@ import org.zeromq.*
 import java.io.NotActiveException
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.text.DecimalFormat
 
 typealias BtcOut = Pair<BtcTx, Vout>
@@ -86,6 +87,8 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return Pair(address.first, address.second)
   }
 
+  override fun encodeAmount(amount: BigDecimal): String = amount.setScale(8).toString()
+
   override fun decodeToUnit(rawAmount: String): BigInteger = toSatoshi(rawAmount)
 
   override fun close() { zmqHandler?.cancel(NotActiveException("Transport is closing")) }
@@ -127,7 +130,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     val txo = requireNotNull(prevTx.vout.find { it.n == from.record.outputIdx })
     val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx, txo.scriptPubKey.hex)
     val result = rpcRequest(Map::class.java, "signrawtransaction", tx.hex,
-        arrayOf(txoParams), arrayOf(decode(from.account))).second
+        arrayOf(txoParams), arrayOf(MkAccountCodec.decode(from.account))).second
     return decodeRawTransaction(result.get("hex") as String)
   }
 
