@@ -30,10 +30,10 @@ class BitcoindTransferSpec {
 
   // Update these as testnet coins get transferred/depleted
   private var seedAccount = MkAccount(
-      type=MkExchangeRate.Crypto.BTC,
-      address="misV7bW9EM67X3r8ENv7hYnsk2eppvQxf6",
-      cipherText="9Co61QQGLc6eYGkI+CVcB3B7wObPXlF6Pkw2mLPAk5LlTlAQ086z2IiY6zVJ1oyOTzfwM7/1Y3UqGCtlXmP4L7i6xrI=",
-      iv="xfj7HcNoKU45TvO3", gcmKey="UpNq7gNLhPfqzT7e+S3axHTLYZnHoOo4fplf8dWBAIk="
+      type = MkExchangeRate.Crypto.BTC,
+      address = "misV7bW9EM67X3r8ENv7hYnsk2eppvQxf6",
+      cipherText = "9Co61QQGLc6eYGkI+CVcB3B7wObPXlF6Pkw2mLPAk5LlTlAQ086z2IiY6zVJ1oyOTzfwM7/1Y3UqGCtlXmP4L7i6xrI=",
+      iv = "xfj7HcNoKU45TvO3", gcmKey = "UpNq7gNLhPfqzT7e+S3axHTLYZnHoOo4fplf8dWBAIk="
   )
   private val seedBlock = 1288402L
   private val seedTx = "0ec55962e61a637714d8a1006d2c1392f4a71e1df0c8c39d11a51255072ce15a"

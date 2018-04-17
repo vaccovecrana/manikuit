@@ -10,7 +10,6 @@ import org.zeromq.*
 import java.io.NotActiveException
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import java.text.DecimalFormat
 
 typealias BtcOut = Pair<BtcTx, Vout>
@@ -60,11 +59,12 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
           .filter { txout -> txout.second.scriptPubKey.addresses != null }
           .filter { txout -> txout.second.scriptPubKey.addresses!!.isNotEmpty() }
           .flatMap { txout -> txout.second.scriptPubKey.addresses!!.map { addr -> BtcAddrOut(txout, addr) } }
-          .map { addrOut -> MkPaymentRecord(
-              type = MkExchangeRate.Crypto.BTC, address = addrOut.second,
-              txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
-              blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
-              timeUtcSec = addrOut.first.first.time)
+          .map { addrOut ->
+            MkPaymentRecord(
+                type = MkExchangeRate.Crypto.BTC, address = addrOut.second,
+                txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
+                blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
+                timeUtcSec = addrOut.first.first.time)
           }
     }
     return MkBlockDetail(summary.first, tx)

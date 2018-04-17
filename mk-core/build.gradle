@@ -7,7 +7,6 @@ dependencies {
   compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.31"
   compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5"
   compile "org.slf4j:slf4j-api:${slf4jVer}"
-  compile "io.vacco.metolithe:mt-annotations:0.30"
 }
 
 kotlin { experimental { coroutines 'enable' } }

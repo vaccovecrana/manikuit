@@ -60,10 +60,11 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     val tx = ethBlock.transactions
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeHexInt(tx.value) != BigInteger.ZERO }
-        .map { tx -> MkPaymentRecord(
-            type = MkExchangeRate.Crypto.ETH, address = tx.to!!,
-            txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
-            outputIdx = 0, timeUtcSec = summary.first.timeUtcSec)
+        .map { tx ->
+          MkPaymentRecord(
+              type = MkExchangeRate.Crypto.ETH, address = tx.to!!,
+              txId = tx.hash, amount = tx.value, blockHeight = summary.first.height,
+              outputIdx = 0, timeUtcSec = summary.first.timeUtcSec)
         }
     return MkBlockDetail(summary.first, tx)
   }
