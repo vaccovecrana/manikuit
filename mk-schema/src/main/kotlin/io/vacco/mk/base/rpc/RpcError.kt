@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.*
 /**
  * An object describing the error if one occurred, otherwise `null`.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("code", "message")
 class RpcError(
