@@ -62,9 +62,9 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
           .map { addrOut ->
             MkPaymentRecord(
                 type = MkExchangeRate.Crypto.BTC, address = addrOut.second,
-                txId = addrOut.first.first.txid, amount = df.get()!!.format(addrOut.first.second.value),
+                txId = addrOut.first.first.txid!!, amount = df.get()!!.format(addrOut.first.second.value),
                 blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
-                timeUtcSec = addrOut.first.first.time)
+                timeUtcSec = addrOut.first.first.time!!)
           }
     }
     return MkBlockDetail(summary.first, tx)
@@ -78,7 +78,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     requireNotNull(unitFee)
     val rawTx = createRawTx(source, targets)
     val signedTx = signRawTx(source, rawTx)
-    val txId = rpcRequest(String::class.java, "sendrawtransaction", signedTx.hex).second
+    val txId = rpcRequest(String::class.java, "sendrawtransaction", signedTx.hex!!).second
     return targets.map { it.copy(txId = txId) }
   }
 
@@ -129,7 +129,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     val prevTx = requireNotNull(getTransaction(from.record.txId))
     val txo = requireNotNull(prevTx.vout.find { it.n == from.record.outputIdx })
     val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx, txo.scriptPubKey.hex)
-    val result = rpcRequest(Map::class.java, "signrawtransaction", tx.hex,
+    val result = rpcRequest(Map::class.java, "signrawtransaction", tx.hex!!,
         arrayOf(txoParams), arrayOf(MkAccountCodec.decode(from.account))).second
     return decodeRawTransaction(result.get("hex") as String)
   }
