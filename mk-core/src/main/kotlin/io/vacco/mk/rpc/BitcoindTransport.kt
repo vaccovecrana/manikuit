@@ -134,6 +134,11 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return decodeRawTransaction(result.get("hex") as String)
   }
 
+  override fun computeFee(from: MkPaymentDetail, to: Collection<MkPaymentTarget>, txUnitFee: BigInteger): BigInteger {
+    val rawTx = createRawTx(from, to)
+    return BigInteger.valueOf(rawTx.size).multiply(txUnitFee)
+  }
+
   fun toBtc(satoshi: BigInteger): BigDecimal = satoshi.toBigDecimal()
       .setScale(getCoinPrecision()).divide(satoshiFactor)
 

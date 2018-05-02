@@ -1,6 +1,9 @@
 package unit
 
+import io.vacco.mk.base.MkAccount
+import io.vacco.mk.base.MkPaymentDetail
 import io.vacco.mk.base.MkPaymentRecord
+import io.vacco.mk.base.MkPaymentTarget
 import io.vacco.mk.rpc.BitcoindTransport
 import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
@@ -86,6 +89,19 @@ class BitcoindTransportSpec {
     it("Can get all transactions for a particular address.") {
       val addrTx = btc!!.getPaymentsFor(testAddress!!)
       assertTrue(addrTx.isNotEmpty())
+    }
+    it("Can compute a transaction fee.") {
+      val feeSatosPerByte = BigInteger.valueOf(64)
+      val tx = btc!!.getPaymentsFor(testAddress!!)[0]
+      val detail = MkPaymentDetail(MkAccount(), tx)
+      val targets = listOf(
+          MkPaymentTarget("mv5pkqqJ3hZwn3oNtaT39HU62w9jPpBGsu", 25),
+          MkPaymentTarget("mzYaFx63twKRRP2NARPYbp6tE3BRgny2gY", 25),
+          MkPaymentTarget("mxvUDjNvkLoSsdN1xrxjYdMMgcdE9XQtao", 25),
+          MkPaymentTarget("mrWM47xpeF6rEP7XCG5GYVUmtpcPT5LnaU", 25)
+      )
+      val fee = btc!!.computeFee(detail, targets, feeSatosPerByte)
+      assertTrue(fee.compareTo(BigInteger.ZERO) == 1)
     }
     it("Can purge the cache.") { btc!!.purge() }
     it("Opens an IPC socket, listens and forwards messages.") {

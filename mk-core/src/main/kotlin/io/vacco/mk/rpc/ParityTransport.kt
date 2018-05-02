@@ -85,6 +85,10 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     }
   }
 
+  override fun computeFee(from: MkPaymentDetail, to: Collection<MkPaymentTarget>,
+                          txUnitFee: BigInteger): BigInteger =
+      txUnitFee.multiply(BigInteger.valueOf(21_000))
+
   override fun encodeAmount(amount: BigDecimal): String {
     val wei = amount.movePointRight(18)
     return encodeHexInt(wei.toBigInteger())

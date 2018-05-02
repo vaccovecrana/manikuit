@@ -1,5 +1,7 @@
 package unit
 
+import io.vacco.mk.base.MkAccount
+import io.vacco.mk.base.MkPaymentDetail
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.rpc.MkAccountCodec
@@ -12,6 +14,7 @@ import org.junit.runner.RunWith
 import org.slf4j.*
 import util.InMemoryBlockCache
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
@@ -86,6 +89,12 @@ class ParityTransportSpec {
     it("Can get all transactions for a particular address.") {
       val addrTx = eth!!.getPaymentsFor(testAddress!!)
       assertTrue(addrTx.isNotEmpty())
+    }
+    it("Can compute a transaction fee.") {
+      val tx = eth!!.getPaymentsFor(testAddress!!)[0]
+      val gasPrice = BigInteger.valueOf(6_000_000_000L)
+      val fee = eth!!.computeFee(MkPaymentDetail(MkAccount(), tx), listOf(), gasPrice)
+      assertEquals(BigInteger.valueOf(126_000_000_000_000L), fee)
     }
     it("Can purge the cache for records older than 5 seconds.") { eth!!.purge() }
     it("Can create a new payment, along with a backing account.") {

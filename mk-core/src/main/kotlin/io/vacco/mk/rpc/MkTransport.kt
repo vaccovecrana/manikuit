@@ -18,6 +18,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
   private var txAddressFilter: BloomFilter<MkPaymentRecord>? = null
 
+  abstract fun computeFee(from: MkPaymentDetail, to: Collection<MkPaymentTarget>, txUnitFee: BigInteger): BigInteger
   abstract fun encodeAmount(amount: BigDecimal): String
   abstract fun decodeToUnit(rawAmount: String): BigInteger
   abstract fun doCreate(): Pair<String, String>
