@@ -40,7 +40,8 @@ class ParityTransferSpec {
   private var targetAcct1: MkAccount? = null
   private var targetAcct2: MkAccount? = null
 
-  private val fee = BigInteger.valueOf(14_000_000_000)
+  private val gasPrice = BigInteger.valueOf(6_000_000_000L)
+  private val fee = BigInteger.valueOf(126_000_000_000_000L)
 
   init {
     beforeAll {
@@ -66,7 +67,7 @@ class ParityTransferSpec {
       val statusMap = eth!!.broadcast(MkPaymentDetail(seedAccount, seedPayment!!), listOf(
           MkPaymentTarget(targetAcct0!!.address, 25),
           MkPaymentTarget(targetAcct1!!.address, 40),
-          MkPaymentTarget(targetAcct2!!.address, 35)), fee)
+          MkPaymentTarget(targetAcct2!!.address, 35)), gasPrice, fee)
       eth!!.onNewBlock = {
         val ta0 = it.second.firstOrNull { it.address == targetAcct0!!.address }
         val ta1 = it.second.firstOrNull { it.address == targetAcct1!!.address }

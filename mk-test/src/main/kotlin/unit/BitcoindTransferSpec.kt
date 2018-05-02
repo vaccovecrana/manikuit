@@ -70,11 +70,12 @@ class BitcoindTransferSpec {
       targetAcct0 = btc!!.create()
       targetAcct1 = btc!!.create()
       targetAcct2 = btc!!.create()
+      val txFee = BigInteger.valueOf(159_501)
       val statusMap = btc!!.broadcast(MkPaymentDetail(seedAccount, seedPayment!!), listOf(
           MkPaymentTarget(targetAcct0!!.address, 30),
           MkPaymentTarget(targetAcct1!!.address, 35),
           MkPaymentTarget(targetAcct2!!.address, 35)
-      ), BigInteger.valueOf(159_501))
+      ), txFee, txFee)
       assertTrue(statusMap.isNotEmpty())
       statusMap
           .map { MkPaymentUtil.awaitPayment(it.address, it.txId, null, btc!!) }
