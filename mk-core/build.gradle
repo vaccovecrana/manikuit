@@ -4,7 +4,7 @@ dependencies {
   compile project(":mk-schema")
   compile "org.zeromq:jeromq:0.4.3"
   compile "com.squareup.okhttp3:okhttp:3.10.0"
-  compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.40"
+  compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.41"
   compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5"
   compile "org.slf4j:slf4j-api:${slf4jVer}"
 }

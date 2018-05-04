@@ -1,5 +1,6 @@
 package io.vacco.mk.rpc
 
+import com.fasterxml.jackson.databind.JsonNode
 import io.vacco.mk.base.*
 import io.vacco.mk.base.btc.*
 import io.vacco.mk.config.MkConfig
@@ -95,8 +96,26 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   private fun getNewAddress(): Pair<String, String> {
     val address = rpcRequest(String::class.java, "getnewaddress").second
-    val privateKey = rpcRequest(String::class.java, "dumpprivkey", address).second
+    var privateKey = rpcRequest(String::class.java, "dumpprivkey", address).second
+    if (isMultiSig(address)) { // need to save segwit/multisig redeemScript
+      var redeemScript = getRedeemScript(address, "getaddressinfo")
+      if (redeemScript == null) {
+        redeemScript = getRedeemScript(address, "validateaddress")
+      }
+      requireNotNull(redeemScript)
+      privateKey = "$privateKey$accountDataSep$redeemScript"
+    }
     return Pair(address, privateKey)
+  }
+
+  private fun getRedeemScript(address: String, tryMethod: String): String? {
+    try {
+      val info = rpcRequest(JsonNode::class.java, tryMethod, address)
+      return info.second.path("hex").textValue()
+    } catch (e: Exception) {
+      if (log.isTraceEnabled) { log.trace("Cannot extract address redeem script using [$tryMethod]") }
+    }
+    return null
   }
 
   private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash).second
@@ -112,7 +131,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return tx.copy(hex = txHex)
   }
 
-  fun createRawTx(from: MkPaymentDetail, to: Collection<MkPaymentTarget>): BtcTx {
+  private fun createRawTx(from: MkPaymentDetail, to: Collection<MkPaymentTarget>): BtcTx {
     requireNotNull(from)
     requireNotNull(to)
     require(to.isNotEmpty())
@@ -122,15 +141,19 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return decodeRawTransaction(txHex)
   }
 
-  fun signRawTx(from: MkPaymentDetail, tx: BtcTx): BtcTx {
+  private fun signRawTx(from: MkPaymentDetail, tx: BtcTx): BtcTx {
     requireNotNull(tx)
     requireNotNull(tx.hex)
     requireNotNull(from)
     val prevTx = requireNotNull(getTransaction(from.record.txId))
     val txo = requireNotNull(prevTx.vout.find { it.n == from.record.outputIdx })
-    val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx, txo.scriptPubKey.hex)
+    val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx, txo.scriptPubKey.hex, null)
+    val prvData = MkAccountCodec.decode(from.account).split(accountDataSep)
+    if (isMultiSig(from.account.address)) {
+      txoParams.redeemScript = prvData[1]
+    }
     val result = rpcRequest(Map::class.java, "signrawtransaction", tx.hex!!,
-        arrayOf(txoParams), arrayOf(MkAccountCodec.decode(from.account))).second
+        arrayOf(txoParams), arrayOf(prvData[0])).second
     return decodeRawTransaction(result.get("hex") as String)
   }
 
@@ -159,4 +182,6 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
       }
     }
   }
+
+  private fun isMultiSig(address: String) = address.startsWith("2") || address.startsWith("3")
 }

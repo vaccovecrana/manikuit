@@ -11,8 +11,6 @@ import java.util.*
 
 class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(config, blockCache) {
 
-  private val accountDataSep = "::"
-
   private var webSocket: WebSocket? = client.newWebSocket(Request.Builder().url(config.pubSubUrl).build(),
       object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket?, response: Response?) {

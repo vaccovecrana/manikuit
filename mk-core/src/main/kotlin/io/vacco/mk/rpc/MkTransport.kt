@@ -15,6 +15,8 @@ import java.time.temporal.ChronoUnit
 abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlockCache):
     MkCachingTransport(config), Closeable {
 
+  protected val accountDataSep = "::"
+
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
   private var txAddressFilter: BloomFilter<MkPaymentRecord>? = null
 
