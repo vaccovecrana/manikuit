@@ -147,7 +147,8 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     requireNotNull(from)
     val prevTx = requireNotNull(getTransaction(from.record.txId))
     val txo = requireNotNull(prevTx.vout.find { it.n == from.record.outputIdx })
-    val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx, txo.scriptPubKey.hex, null)
+    val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx,
+        txo.scriptPubKey.hex, from.record.amount, null)
     val prvData = MkAccountCodec.decode(from.account).split(accountDataSep)
     if (isMultiSig(from.account.address)) {
       txoParams.redeemScript = prvData[1]
