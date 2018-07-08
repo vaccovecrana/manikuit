@@ -35,7 +35,7 @@ object MkAccountCodec {
   }
 
   fun fingerPrintAddress(pr: MkPaymentRecord): ByteBuffer {
-    val data = StringBuilder().append(pr.type).append(pr.address).toString()
+    val data = StringBuilder().append(pr.type).append(pr.address.toLowerCase()).toString()
     val bytes = data.toByteArray()
     val bb = ByteBuffer.allocateDirect(bytes.size)
     bb.put(bytes)
