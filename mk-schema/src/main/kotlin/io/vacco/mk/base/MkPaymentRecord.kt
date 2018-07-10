@@ -43,4 +43,4 @@ open class MkPaymentRecord(
     @JsonPropertyDescription("The UTC epoch timestamp of this transaction.")
     var timeUtcSec: Long = 0
 
-) { enum class Status { PENDING, COMPLETE } }
+) { enum class Status { PENDING, PROCESSING, COMPLETE } }

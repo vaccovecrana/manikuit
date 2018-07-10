@@ -117,8 +117,10 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
       blockCache.getPaymentsFor(address, getChainType())
 
   fun getStatus(payment: MkPaymentRecord, currentBlockHeight: Long): MkPaymentRecord.Status {
-    return if (getBlockDelta(payment, currentBlockHeight) >= config.confirmationThreshold)
-      MkPaymentRecord.Status.COMPLETE else MkPaymentRecord.Status.PENDING
+    val delta = getBlockDelta(payment, currentBlockHeight)
+    if (delta >= config.confirmationThreshold) return MkPaymentRecord.Status.COMPLETE
+    if (delta > 0 && delta < config.confirmationThreshold) return MkPaymentRecord.Status.PROCESSING
+    return MkPaymentRecord.Status.PENDING
   }
 
   fun getBlockDelta(payment: MkPaymentRecord, currentBlockHeight: Long): Long {
