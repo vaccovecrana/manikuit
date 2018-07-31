@@ -122,7 +122,9 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   private fun getTransaction(txId: String): BtcTx? {
     try { return rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second }
-    catch (e: Exception) { log.warn(e.message) }
+    catch (e: Exception) {
+      if (log.isTraceEnabled) { log.trace(e.message) }
+    }
     return null
   }
 
