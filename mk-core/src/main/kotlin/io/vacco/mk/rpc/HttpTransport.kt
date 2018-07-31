@@ -54,9 +54,11 @@ open class HttpTransport(config: HttpConfig) {
         return json
       }
       val errorMsg = "[${response.code()}] -> ${response.message()}"
-      log.warn(errorMsg)
-      val errorBody = response.body()
-      if (errorBody != null) { log.warn(errorBody.string()) }
+      if (log.isDebugEnabled) {
+        log.debug(errorMsg)
+        val errorBody = response.body()
+        if (errorBody != null) { log.debug(errorBody.string()) }
+      }
       throw IllegalStateException(errorMsg)
     }
   }

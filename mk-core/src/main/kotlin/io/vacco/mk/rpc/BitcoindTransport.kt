@@ -120,13 +120,9 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash).second
 
-  private fun getTransaction(txId: String): BtcTx? {
-    try { return rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second }
-    catch (e: Exception) {
-      if (log.isTraceEnabled) { log.trace(e.message) }
-    }
-    return null
-  }
+  private fun getTransaction(txId: String): BtcTx? = try {
+    rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second
+  } catch (e: Exception) { null }
 
   private fun decodeRawTransaction(txHex: String): BtcTx {
     val tx = rpcRequest(BtcTx::class.java, "decoderawtransaction", txHex).second

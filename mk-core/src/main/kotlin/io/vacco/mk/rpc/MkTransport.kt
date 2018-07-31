@@ -56,7 +56,10 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         onNewBlock(blockDetail)
         blockDetail.second
             .filter { txAddressFilter!!.isPresent(it) }
-            .forEach{ onAddressMatch(it) }
+            .forEach{
+              log.warn("Address notification match: [${it.address}]")
+              onAddressMatch(it)
+            }
       }
     } catch (e: Exception) {
       log.error("Unable to complete new block notifications. Please verify storage/listener implementations.", e)
@@ -67,6 +70,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     requireNotNull(pr.type)
     requireNotNull(pr.address)
     require(pr.type === getChainType())
+    log.warn("Address notification watch: [${pr.address}]")
     txAddressFilter!!.add(pr)
   }
 
