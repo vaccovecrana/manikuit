@@ -20,7 +20,8 @@ package com.ifesdjeen.blomstre;
  * limitations under the License.
  */
 
-import io.vacco.mk.util.MurmurHash3;
+import net.openhft.hashing.LongHashFunction;
+
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
@@ -45,19 +46,12 @@ public class BloomFilter<T> {
     return getHashBuckets(key, hashCount, bitset.capacity());
   }
 
-  protected long[] hash(ByteBuffer b,
-                        long seed) {
-    return MurmurHash3.hash3_x64_128(b, 0, b.capacity(), seed);
-  }
-
-  // Murmur is faster than an SHA-based approach and provides as-good collision
-  // resistance.  The combinatorial generation approach described in
-  // https://www.eecs.harvard.edu/~michaelm/postscripts/tr-02-05.pdf
-  // does prove to work in actual tests, and is obviously faster
-  // than performing further iterations of murmur.
   long[] getHashBuckets(ByteBuffer b, int hashCount, long max) {
     final long[] result = new long[hashCount];
-    final long[] hash = this.hash(b, 0L);
+    final long [] hash = new long [] {
+        LongHashFunction.xx().hashBytes(b),
+        LongHashFunction.murmur_3().hashBytes(b)
+    };
     for (int i = 0; i < hashCount; ++i) {
       result[i] = Math.abs((hash[0] + (long) i * hash[1]) % max);
     }

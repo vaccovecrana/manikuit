@@ -5,6 +5,7 @@ import io.vacco.mk.base.*
 import io.vacco.mk.base.btc.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.spi.MkBlockCache
+import io.vacco.mk.util.MkHashing
 import io.vacco.mk.util.MkSplit
 import kotlinx.coroutines.experimental.*
 import org.zeromq.*
@@ -44,8 +45,10 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
   override fun getBlock(height: Long): MkBlockSummary {
     val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
     val btcBlock = getBtcBlock(btcBlockHash)
-    return Pair(MkBlock(height = height, timeUtcSec = btcBlock.time,
-        hash = btcBlockHash, type = MkExchangeRate.Crypto.BTC), btcBlock.tx.toList())
+    return Pair(MkBlock(
+        id = MkHashing.apply(MkExchangeRate.Crypto.BTC, height, btcBlockHash),
+        height = height, timeUtcSec = btcBlock.time, hash = btcBlockHash,
+        type = MkExchangeRate.Crypto.BTC), btcBlock.tx.toList())
   }
 
   override fun doGetBlockDetail(summary: MkBlockSummary): MkBlockDetail {

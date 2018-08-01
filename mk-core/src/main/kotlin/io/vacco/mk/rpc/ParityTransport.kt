@@ -4,6 +4,7 @@ import io.vacco.mk.base.*
 import io.vacco.mk.base.eth.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.spi.MkBlockCache
+import io.vacco.mk.util.MkHashing
 import io.vacco.mk.util.MkSplit
 import okhttp3.*
 import java.math.*
@@ -47,6 +48,7 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
     val ethBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
         "0x${java.lang.Long.toHexString(height)}", false).second
     return MkBlockSummary(MkBlock(
+        id = MkHashing.apply(MkExchangeRate.Crypto.ETH, height, ethBlock.hash),
         height = height, timeUtcSec = decodeLong(ethBlock.timestamp),
         hash = ethBlock.hash, type = MkExchangeRate.Crypto.ETH
     ), ethBlock.transactions)

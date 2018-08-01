@@ -6,10 +6,9 @@ import javax.validation.constraints.*
 
 @MtEntity
 data class MkBlock(
-
-    @MtId @MtAttribute(len = 32)
-    @Size(min = 32, max = 32)
-    @JsonPropertyDescription("Internal hash/id (block no + block hash + block type).")
+    @MtId @MtAttribute(len = 16)
+    @Size(min = 16, max = 16)
+    @JsonPropertyDescription("Internal 64-bit hash/id (block no + block hash + block type).")
     var id: String = "",
 
     @MtAttribute(nil = false)

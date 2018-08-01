@@ -4,6 +4,7 @@ import unit.*
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
+    BloomFilterSpec::class,
     NoOpBlockCacheSpec::class,
     MkSplitSpec::class,
     RpcTransportSpec::class,

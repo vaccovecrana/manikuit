@@ -77,7 +77,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
     val bd = doGetBlockDetail(summary)
     return bd.copy(second = bd.second.map {
-      it.id = MurmurHash3.apply(it.type, it.address, it.amount, it.blockHeight, it.txId)
+      it.id = MkHashing.apply(it.type, it.address, it.amount, it.blockHeight, it.txId)
       it
     })
   }

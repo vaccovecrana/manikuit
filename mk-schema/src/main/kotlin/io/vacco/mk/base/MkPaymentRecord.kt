@@ -6,8 +6,9 @@ import javax.validation.constraints.*
 
 @MtEntity
 open class MkPaymentRecord(
-    @MtId @MtAttribute(len = 32)
-    @JsonPropertyDescription("Internal record hash.")
+    @MtId @MtAttribute(len = 16)
+    @Size(min = 16, max = 16)
+    @JsonPropertyDescription("Internal 64-bit record hash.")
     var id: String = "",
 
     @MtAttribute(nil = false, len = 32)
