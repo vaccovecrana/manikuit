@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class MkHashing {
 
-  public static String apply(Object... args) {
+  public static String withSeed(long seed, Object ... args) {
     List<byte[]> bytes = Arrays.stream(args)
         .filter(Objects::nonNull)
         .map(Object::toString)
@@ -15,8 +15,12 @@ public class MkHashing {
         .collect(Collectors.toList());
     ByteBuffer bb = ByteBuffer.allocateDirect(bytes.stream().mapToInt(ba -> ba.length).sum());
     bytes.forEach(bb::put);
-    long hash = LongHashFunction.xx().hashBytes(bb);
+    long hash = LongHashFunction.xx(seed).hashBytes(bb);
     return asHex(longToBytes(hash));
+  }
+
+  public static String apply(Object... args) {
+    return withSeed(0, args);
   }
 
   private static String asHex(byte[] bytes) {
