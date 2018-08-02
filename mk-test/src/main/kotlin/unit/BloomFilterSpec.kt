@@ -29,6 +29,14 @@ class BloomFilterSpec {
       require(hash.length == 16)
       println(hash)
     }
+    it("Checks that different hashed object sequences have different hashed values") {
+      val hash0 = MkHashing.apply(mbiapn, "lol")
+      val hash1 = MkHashing.apply(mbiapn, "84756")
+      val hash2 = MkHashing.apply(null, null, 9, 0)
+      require(hash0 != hash1)
+      require(hash1 != hash2)
+      require(hash0 != hash2)
+    }
     it("Adds elements to the bloom filter") {
       bf.add(mbiapn)
     }
