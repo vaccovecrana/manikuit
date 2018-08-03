@@ -3,13 +3,13 @@ package unit
 import io.vacco.mk.base.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.rpc.BitcoindTransport
+import io.vacco.mk.util.NoOpBlockCache
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
 import org.junit.runner.RunWith
 import j8spec.J8Spec.*
 import org.slf4j.*
 import org.junit.Assert.*
-import util.InMemoryBlockCache
 import util.MkPaymentUtil
 import java.math.BigInteger
 import java.time.temporal.ChronoUnit
@@ -28,21 +28,22 @@ class BitcoindTransferSpec {
   MkAccount(type=btc, address=n3cPjudEELsUqTQCzzwSPyvMwk9JZuxBZx, cipherText=m0M5rgk2Kh7krN+H0ADJx3rihmLuws4SfBSdwhoNhEyHF/iWzPh7sw/uyo6LGdFZGw0jSpcKLQJbhpd4mq84cegAp1o=, iv=bQnikyrOtasIhGhG, gcmKey=O7XasO1hyT4YM3nKenR4MpELQZG5KhQ+4Zd+/aL/mgY=)
    */
 
-  // Update these as testnet coins get transferred/depleted
+  // Update these as test net coins get transferred/depleted
   private var seedAccount = MkAccount(
       type = MkExchangeRate.Crypto.BTC,
       address = "misV7bW9EM67X3r8ENv7hYnsk2eppvQxf6",
       cipherText = "9Co61QQGLc6eYGkI+CVcB3B7wObPXlF6Pkw2mLPAk5LlTlAQ086z2IiY6zVJ1oyOTzfwM7/1Y3UqGCtlXmP4L7i6xrI=",
       iv = "xfj7HcNoKU45TvO3", gcmKey = "UpNq7gNLhPfqzT7e+S3axHTLYZnHoOo4fplf8dWBAIk="
   )
-  private val seedBlock = 1288402L
-  private val seedTx = "0ec55962e61a637714d8a1006d2c1392f4a71e1df0c8c39d11a51255072ce15a"
   private var seedPayment: MkPaymentRecord? = null
-  private val seedAmount = "0.01800000" // BTC
 
   private var targetAcct0: MkAccount? = null
   private var targetAcct1: MkAccount? = null
   private var targetAcct2: MkAccount? = null
+
+  private val returnAddress0 = "mv5pkqqJ3hZwn3oNtaT39HU62w9jPpBGsu"
+  private val returnAddress1 = "mzYaFx63twKRRP2NARPYbp6tE3BRgny2gY"
+  private val returnAddress2 = "mxvUDjNvkLoSsdN1xrxjYdMMgcdE9XQtao"
 
   init {
     beforeAll {
@@ -52,34 +53,48 @@ class BitcoindTransferSpec {
       cfg.username = "gopher"
       cfg.password = "omglol"
       cfg.connectionPoolSize = 8
-      btc = BitcoindTransport(cfg, InMemoryBlockCache())
+      btc = BitcoindTransport(cfg, NoOpBlockCache())
       btc!!.update()
     }
     it("Seeds the BTC source account") {
-      ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount.address}?amount=$seedAmount | open -f -a preview").start()
-      log.info("Send me coin! :D")
-      val payment = MkPaymentUtil.awaitPayment(seedAccount.address, null, seedAmount, btc!!)
-      MkPaymentUtil.awaitConfirmation(payment, btc!!)
+      ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount.address}?amount=0.01800000 | open -f -a preview").start()
+      log.info("Send 0.01800000 BTC from a funding account...")
+      val payment = MkPaymentUtil.awaitPayment(btc!!, seedAccount.address)[seedAccount.address]
+      MkPaymentUtil.awaitConfirmation(payment!!, btc!!)
     }
-    it("Splits the seed payment into 3 accounts") {
-      seedPayment = btc!!.getBlockDetail(btc!!.getBlock(seedBlock)).second
-          .filter { it.txId == seedTx }
-          .first { it.amount == seedAmount }
+    it("Splits the seed payment into 3 accounts and relays funds back to target return addresses") {
       assertNotNull(seedPayment)
       assertEquals(MkPaymentRecord.Status.COMPLETE, btc!!.getStatus(seedPayment!!, btc!!.getLatestBlockNumber()))
       targetAcct0 = btc!!.create()
       targetAcct1 = btc!!.create()
       targetAcct2 = btc!!.create()
+
+      val acctIdx = mapOf(
+          targetAcct0!!.address to targetAcct0,
+          targetAcct1!!.address to targetAcct1,
+          targetAcct2!!.address to targetAcct2
+      )
       val txFee = BigInteger.valueOf(159_501)
+
       val statusMap = btc!!.broadcast(MkPaymentDetail(seedAccount, seedPayment!!), listOf(
           MkPaymentTarget(targetAcct0!!.address, 30),
           MkPaymentTarget(targetAcct1!!.address, 35),
           MkPaymentTarget(targetAcct2!!.address, 35)
       ), txFee, txFee)
       assertTrue(statusMap.isNotEmpty())
-      statusMap
-          .map { MkPaymentUtil.awaitPayment(it.address, it.txId, null, btc!!) }
-          .map { MkPaymentUtil.awaitConfirmation(it, btc!!) }
+
+      val paymentsIn = MkPaymentUtil
+          .awaitPayment(btc!!, *statusMap.map { it.address }.toTypedArray())
+          .values.map { MkPaymentDetail(acctIdx[it.address]!!, it) }
+
+      val paymentsOut = arrayOf(
+          btc!!.broadcast(paymentsIn[0], listOf(MkPaymentTarget(returnAddress0, 100)), txFee, txFee).toTypedArray()[0],
+          btc!!.broadcast(paymentsIn[1], listOf(MkPaymentTarget(returnAddress1, 100)), txFee, txFee).toTypedArray()[0],
+          btc!!.broadcast(paymentsIn[2], listOf(MkPaymentTarget(returnAddress2, 100)), txFee, txFee).toTypedArray()[0]
+      )
+
+      MkPaymentUtil.awaitPayment(btc!!, *paymentsOut.map { it.address }.toTypedArray())
+          .values.map { MkPaymentUtil.awaitConfirmation(it, btc!!) }
     }
   }
 }

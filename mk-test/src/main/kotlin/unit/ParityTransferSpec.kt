@@ -68,6 +68,7 @@ class ParityTransferSpec {
           targetAcct1!!.address to targetAcct1,
           targetAcct2!!.address to targetAcct2
       )
+
       val statusMap = eth!!.broadcast(MkPaymentDetail(seedAccount, seedPayment!!), listOf(
           MkPaymentTarget(targetAcct0!!.address, 25),
           MkPaymentTarget(targetAcct1!!.address, 40),
@@ -79,11 +80,13 @@ class ParityTransferSpec {
       ).values
           .map { MkPaymentUtil.awaitConfirmation(it, eth!!) }
           .map { MkPaymentDetail(acctIdx[it.address]!!, it) }
+
       val paymentsOut = arrayOf(
           eth!!.broadcast(paymentsIn[0], listOf(MkPaymentTarget(returnAddress0, 100)), gasPrice, fee).toTypedArray()[0],
           eth!!.broadcast(paymentsIn[1], listOf(MkPaymentTarget(returnAddress1, 100)), gasPrice, fee).toTypedArray()[0],
           eth!!.broadcast(paymentsIn[2], listOf(MkPaymentTarget(returnAddress2, 100)), gasPrice, fee).toTypedArray()[0]
       )
+
       MkPaymentUtil.awaitPayment(eth!!, *paymentsOut.map { it.address }.toTypedArray())
           .values.map { MkPaymentUtil.awaitConfirmation(it, eth!!) }
     }
