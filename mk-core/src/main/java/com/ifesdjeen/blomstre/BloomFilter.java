@@ -30,10 +30,10 @@ public class BloomFilter<T> {
   private static final long BITSET_EXCESS = 20;
 
   private final Function<T, ByteBuffer> converter;
-  public final ConcurrentBitSet bitset;
-  public final int hashCount;
+  private final ConcurrentBitSet bitset;
+  private final int hashCount;
 
-  BloomFilter(Function<T, ByteBuffer> converter,
+  private BloomFilter(Function<T, ByteBuffer> converter,
               int hashes,
               ConcurrentBitSet bitset
   ) {
@@ -46,12 +46,13 @@ public class BloomFilter<T> {
     return getHashBuckets(key, hashCount, bitset.capacity());
   }
 
-  long[] getHashBuckets(ByteBuffer b, int hashCount, long max) {
+  private long[] getHashBuckets(ByteBuffer b, int hashCount, long max) {
     final long[] result = new long[hashCount];
-    final long [] hash = new long [] {
-        LongHashFunction.xx().hashBytes(b),
-        LongHashFunction.murmur_3().hashBytes(b)
-    };
+    b.clear();
+    final long xxH = LongHashFunction.xx().hashBytes(b);
+    b.clear();
+    final long m3 = LongHashFunction.murmur_3().hashBytes(b);
+    final long [] hash = new long [] {xxH, m3};
     for (int i = 0; i < hashCount; ++i) {
       result[i] = Math.abs((hash[0] + (long) i * hash[1]) % max);
     }
@@ -62,7 +63,7 @@ public class BloomFilter<T> {
     add(converter.apply(key));
   }
 
-  protected void add(ByteBuffer key) {
+  private void add(ByteBuffer key) {
     for (long bucketIndex : getHashBuckets(key)) {
       bitset.set(bucketIndex);
     }
@@ -72,7 +73,7 @@ public class BloomFilter<T> {
     return isPresent(converter.apply(key));
   }
 
-  protected boolean isPresent(ByteBuffer key) {
+  private boolean isPresent(ByteBuffer key) {
     for (long bucketIndex : getHashBuckets(key)) {
       if (!bitset.get(bucketIndex)) {
         return false;
@@ -92,6 +93,6 @@ public class BloomFilter<T> {
     BloomCalculations.BloomSpecification spec =
         BloomCalculations.computeBloomSpec(maxBucketsPerElement, maxFalsePosProbability);
     long numBits = (numElements * spec.bucketsPerElement) + BITSET_EXCESS;
-    return new BloomFilter<T>(converter, spec.K, new ConcurrentBitSet(numBits));
+    return new BloomFilter<>(converter, spec.K, new ConcurrentBitSet(numBits));
   }
 }

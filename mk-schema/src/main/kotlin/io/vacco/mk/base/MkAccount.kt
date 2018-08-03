@@ -32,4 +32,6 @@ open class MkAccount(
     @JsonProperty("gcmKey")
     @Size(max = 256)
     val gcmKey: String = ""
-)
+) {
+    override fun toString(): String = "(${this.type}) ${this.address}"
+}

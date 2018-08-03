@@ -41,8 +41,9 @@ class BloomFilterSpec {
       bf.add(mbiapn)
     }
     it("Checks that an element is present in the bloom filter") {
-      val p = bf.isPresent(mbiapn)
-      require(p)
+      bf.add("0xe58230311c16fa171652f5b8fa569b95b4e5828f")
+      require( bf.isPresent(mbiapn))
+      require(!bf.isPresent("0xa5086cf7d153a06f2802e46d87bea16b1bd75f39"))
     }
   }
 }

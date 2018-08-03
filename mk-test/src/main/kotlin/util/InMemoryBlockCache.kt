@@ -39,7 +39,7 @@ class InMemoryBlockCache : MkBlockCache {
   }
 
   override fun getPaymentsFor(address: String, type: MkExchangeRate.Crypto):
-      List<MkPaymentRecord> = paymentByAddress[address]!!
+      List<MkPaymentRecord> = paymentByAddress[address] ?: emptyList()
 
   override fun purge(cacheLimit: Long, type: MkExchangeRate.Crypto) {
     val toRemove = paymentById.values

@@ -2,38 +2,38 @@ package util
 
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.rpc.MkTransport
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.*
+import java.util.concurrent.ConcurrentHashMap
 
 object MkPaymentUtil {
 
   private val log: Logger = LoggerFactory.getLogger(javaClass)
 
-  fun awaitPayment(address: String, txId: String?, amount: String?, trx: MkTransport): MkPaymentRecord {
-    var py0: MkPaymentRecord? = null
-    while (true) {
-      log.info("Awaiting payment on [$address, $txId, $amount]")
-      val addrTx = trx.getPaymentsFor(address)
-      if (amount == null) {
-        py0 = addrTx.firstOrNull { it.txId == txId }
-      } else if (txId == null) {
-        py0 = addrTx.firstOrNull { it.amount == amount }
-      }
-      if (py0 != null) break
-      Thread.sleep(30_000)
+  fun awaitPayment(trx: MkTransport, vararg address: String):
+      Map<String, MkPaymentRecord> {
+    val result = ConcurrentHashMap<String, MkPaymentRecord>()
+    address.map {
+      trx.notifyOnAddress(MkPaymentRecord(type = trx.getChainType(), address = it))
     }
-    return py0!!
+    trx.onAddressMatch = {
+      result[it.address] = it
+    }
+    while (result.size != address.size) {
+      log.info("Awaiting payments: [${result.size} of ${address.size}] on [${address.joinToString()}]")
+      Thread.sleep(10_000)
+    }
+    return result
   }
 
-  fun awaitConfirmation(payment: MkPaymentRecord, trx: MkTransport): MkPaymentRecord.Status {
+  fun awaitConfirmation(payment: MkPaymentRecord, trx: MkTransport): MkPaymentRecord {
+    var status: MkPaymentRecord.Status
     while (true) {
-      log.info("Awaiting payment confirmation on [$payment]")
-      val currentBlock = trx.getLatestBlockNumber()
-      val status = trx.getStatus(payment, currentBlock)
-      if (status == MkPaymentRecord.Status.COMPLETE) break
-      Thread.sleep(30_000)
+      status = trx.getStatus(payment, trx.getLatestBlockNumber())
+      if (status == MkPaymentRecord.Status.COMPLETE) { break }
+      log.info("Awaiting payment confirmation on $payment")
+      Thread.sleep(10_000)
     }
-    return MkPaymentRecord.Status.COMPLETE
+    log.info("Payment confirmed: ${payment}")
+    return payment
   }
-
 }

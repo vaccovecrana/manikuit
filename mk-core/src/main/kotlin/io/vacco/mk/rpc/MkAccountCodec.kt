@@ -39,6 +39,7 @@ object MkAccountCodec {
     val bytes = data.toByteArray()
     val bb = ByteBuffer.allocateDirect(bytes.size)
     bb.put(bytes)
+    bb.clear()
     return bb
   }
 }
