@@ -28,9 +28,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
                            unitFee: BigInteger): Collection<MkPaymentTarget>
 
   abstract fun getLatestBlockNumber(): Long
-  abstract fun getBlock(height: Long): MkBlockSummary
-
-  protected abstract fun doGetBlockDetail(summary: MkBlockSummary): MkBlockDetail
+  protected abstract fun doGetBlockDetail(height: Long): MkBlockDetail
 
   abstract fun getChainType(): MkExchangeRate.Crypto
   abstract fun getCoinPrecision(): Int
@@ -74,8 +72,8 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     txAddressFilter!!.add(pr)
   }
 
-  fun getBlockDetail(summary: MkBlockSummary): MkBlockDetail {
-    val bd = doGetBlockDetail(summary)
+  fun getBlockDetail(height: Long): MkBlockDetail {
+    val bd = doGetBlockDetail(height)
     return bd.copy(second = bd.second.map {
       it.id = MkHashing.apply(it.type, it.address, it.amount, it.blockHeight, it.txId)
       it
@@ -96,23 +94,21 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   override fun update() {
     val utcCoff = blockScanCutOffSec()
-    val blockSummaries = mutableListOf<MkBlockSummary>()
+    val blocks = mutableListOf<MkBlockDetail>()
     val localLatest = blockCache.getLatestLocalBlockFor(getChainType())
     if (getLatestBlockNumber() >= localLatest) {
       var remoteStart = getLatestBlockNumber()
-      var blockSummary = getBlock(remoteStart)
+      var block = getBlockDetail(remoteStart)
       while(true) {
-        if (blockSummary.first.timeUtcSec <= utcCoff) break
-        if (blockSummary.first.height <= localLatest) break
-        blockCache.storeBlock(blockSummary.first)
-        blockSummaries.add(blockSummary)
+        if (block.first.timeUtcSec <= utcCoff) break
+        if (block.first.height <= localLatest) break
+        blockCache.storeBlock(block.first)
+        blocks.add(block)
         remoteStart -= 1
-        blockSummary = getBlock(remoteStart)
+        block = getBlockDetail(remoteStart)
       }
     }
-    blockSummaries.asSequence()
-        .map(this::getBlockDetail).map { it.second }
-        .forEach { paymentList -> blockCache.storeRecords(paymentList) }
+    blockCache.storeRecords(blocks.flatMap { it.second })
   }
 
   override fun purge() = blockCache.purge(blockCacheCutOffSec(), getChainType())
@@ -128,7 +124,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   }
 
   fun getBlockDelta(payment: MkPaymentRecord, currentBlockHeight: Long): Long {
-    return currentBlockHeight - payment.blockHeight
+    return currentBlockHeight - (payment.blockHeight - 1)
   }
 
   private fun blockScanCutOffSec(): Long = nowUtcSecMinus(config.blockScanLimit, config.blockScanLimitUnit)

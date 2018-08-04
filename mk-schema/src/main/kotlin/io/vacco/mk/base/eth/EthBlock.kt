@@ -54,7 +54,7 @@ data class EthBlock(
     var totalDifficulty: String = "",
     @JsonProperty("transactions")
     @Valid
-    var transactions: List<String> = ArrayList(),
+    var transactions: List<Transaction> = ArrayList(),
     @JsonProperty("transactionsRoot")
     var transactionsRoot: String = "",
     @JsonProperty("uncles")

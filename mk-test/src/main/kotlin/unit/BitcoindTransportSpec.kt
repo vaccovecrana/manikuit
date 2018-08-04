@@ -62,7 +62,6 @@ class BitcoindTransportSpec {
       assertNotNull(keyData)
       log.info(keyData)
     }
-
     it("Can update the BTC cache.") { btc!!.update() }
     it("Can skip a cache update if the local block cache is up to date.") { btc!!.update() }
 
@@ -105,7 +104,7 @@ class BitcoindTransportSpec {
     }
     it("Can purge the cache.") { btc!!.purge() }
     it("Opens an IPC socket, listens and forwards messages.") {
-      Thread.sleep(30_000)
+      Thread.sleep(60_000)
       btc?.close()
     }
   }

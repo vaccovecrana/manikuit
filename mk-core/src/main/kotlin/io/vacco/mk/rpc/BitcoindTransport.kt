@@ -42,36 +42,32 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
   override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
-  override fun getBlock(height: Long): MkBlockSummary {
+  override fun doGetBlockDetail(height: Long): MkBlockDetail {
     val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
-    val btcBlock = getBtcBlock(btcBlockHash)
-    return Pair(MkBlock(
-        id = MkHashing.apply(MkExchangeRate.Crypto.BTC, height, btcBlockHash),
-        height = height, timeUtcSec = btcBlock.time, hash = btcBlockHash,
-        type = MkExchangeRate.Crypto.BTC), btcBlock.tx.toList())
+    return convert(getBtcBlock(btcBlockHash))
   }
 
-  override fun doGetBlockDetail(summary: MkBlockSummary): MkBlockDetail {
-    val deferred = summary.second.map { txId -> async { getTransaction(txId) } }
-    val tx = runBlocking {
-      deferred.map { it.await() }
-          .filter { tx -> tx != null }
-          .filter { tx -> tx!!.vout.isNotEmpty() }
-          .flatMap { tx -> tx!!.vout.map { out -> BtcOut(tx, out) } }
-          .filter { txout -> txout.second.value > 0 }
-          .filter { txout -> txout.second.scriptPubKey.reqSigs > 0 }
-          .filter { txout -> txout.second.scriptPubKey.addresses != null }
-          .filter { txout -> txout.second.scriptPubKey.addresses!!.isNotEmpty() }
-          .flatMap { txout -> txout.second.scriptPubKey.addresses!!.map { addr -> BtcAddrOut(txout, addr) } }
-          .map { addrOut ->
-            MkPaymentRecord(
-                type = MkExchangeRate.Crypto.BTC, address = addrOut.second,
-                txId = addrOut.first.first.txid!!, amount = df.get()!!.format(addrOut.first.second.value),
-                blockHeight = summary.first.height, outputIdx = addrOut.first.second.n,
-                timeUtcSec = addrOut.first.first.time!!)
-          }
-    }
-    return MkBlockDetail(summary.first, tx)
+  private fun convert(btcBlock: BtcBlock): MkBlockDetail {
+    val mkBlock = MkBlock(
+        id = MkHashing.apply(MkExchangeRate.Crypto.BTC, btcBlock.height, btcBlock.hash),
+        height = btcBlock.height, timeUtcSec = btcBlock.time, hash = btcBlock.hash,
+        type = MkExchangeRate.Crypto.BTC)
+    val tx = btcBlock.tx
+        .filter { tx -> tx.vout.isNotEmpty() }
+        .flatMap { tx -> tx.vout.map { out -> BtcOut(tx, out) } }
+        .filter { txout -> txout.second.value > 0 }
+        .filter { txout -> txout.second.scriptPubKey.reqSigs > 0 }
+        .filter { txout -> txout.second.scriptPubKey.addresses != null }
+        .filter { txout -> txout.second.scriptPubKey.addresses!!.isNotEmpty() }
+        .flatMap { txout -> txout.second.scriptPubKey.addresses!!.map { addr -> BtcAddrOut(txout, addr) } }
+        .map { addrOut ->
+          MkPaymentRecord(
+              type = MkExchangeRate.Crypto.BTC, address = addrOut.second,
+              txId = addrOut.first.first.txid!!, amount = df.get()!!.format(addrOut.first.second.value),
+              blockHeight = mkBlock.height, outputIdx = addrOut.first.second.n,
+              timeUtcSec = btcBlock.time)
+        }
+    return MkBlockDetail(mkBlock, tx)
   }
 
   override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>,
@@ -121,7 +117,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return null
   }
 
-  private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash).second
+  private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash, 2).second
 
   private fun getTransaction(txId: String): BtcTx? = try {
     rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second
@@ -177,8 +173,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
       when (topic) {
         hashBlock -> {
           val btcBlock = getBtcBlock(msg.popString())
-          val blockSummary = getBlock(btcBlock.height)
-          val blockDetail = getBlockDetail(blockSummary)
+          val blockDetail = convert(btcBlock)
           newBlock(blockDetail)
         }
       }

@@ -27,12 +27,9 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
           val payload = mapper.readTree(text)
           val blockHash = payload.path("params").path("result").path("hash").asText("")
           if (blockHash != null && blockHash.isNotEmpty()) {
-            val rawBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByHash", blockHash, false).second
+            val rawBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByHash", blockHash, true).second
             if (rawBlock.transactions.isNotEmpty()) {
-              if (log.isDebugEnabled) { log.debug("Retrieving block metadata for [$blockHash] with ${rawBlock.transactions.size} transactions") }
-              val block = getBlock(decodeLong(rawBlock.number))
-              val blockDetail = getBlockDetail(block)
-              newBlock(blockDetail)
+              newBlock(convert(rawBlock))
             }
           }
         }
@@ -44,29 +41,26 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
   override fun getUrl(payment: MkPaymentDetail): String = payment.account.address
   override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
 
-  override fun getBlock(height: Long): MkBlockSummary {
-    val ethBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
-        "0x${java.lang.Long.toHexString(height)}", false).second
-    return MkBlockSummary(MkBlock(
-        id = MkHashing.apply(MkExchangeRate.Crypto.ETH, height, ethBlock.hash),
-        height = height, timeUtcSec = decodeLong(ethBlock.timestamp),
-        hash = ethBlock.hash, type = MkExchangeRate.Crypto.ETH
-    ), ethBlock.transactions)
-  }
+  override fun doGetBlockDetail(height: Long): MkBlockDetail =
+      convert(rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
+          encodeLong(height), true).second)
 
-  override fun doGetBlockDetail(summary: MkBlockSummary): MkBlockDetail {
-    val ethBlock = rpcRequest(EthBlockDetail::class.java, "eth_getBlockByNumber",
-        encodeLong(summary.first.height), true).second
+  private fun convert(ethBlock: EthBlock): MkBlockDetail {
+    val mkBlock = MkBlock(
+        id = MkHashing.apply(MkExchangeRate.Crypto.ETH, ethBlock.number, ethBlock.hash),
+        height = decodeLong(ethBlock.number), timeUtcSec = decodeLong(ethBlock.timestamp),
+        hash = ethBlock.hash, type = MkExchangeRate.Crypto.ETH
+    )
     val tx = ethBlock.transactions
         .filter { tx -> tx.to != null }
         .filter { tx -> decodeHexInt(tx.value) != BigInteger.ZERO }
         .map { tx ->
           MkPaymentRecord(
               type = MkExchangeRate.Crypto.ETH, address = tx.to!!,
-              txId = tx.hash!!, amount = tx.value, blockHeight = summary.first.height,
-              outputIdx = 0, timeUtcSec = summary.first.timeUtcSec)
+              txId = tx.hash!!, amount = tx.value, blockHeight = mkBlock.height,
+              outputIdx = 0, timeUtcSec = mkBlock.timeUtcSec)
         }
-    return MkBlockDetail(summary.first, tx)
+    return MkBlockDetail(mkBlock, tx)
   }
 
   override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): Collection<MkPaymentTarget> {

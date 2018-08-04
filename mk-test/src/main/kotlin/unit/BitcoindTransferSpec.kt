@@ -54,13 +54,12 @@ class BitcoindTransferSpec {
       cfg.password = "omglol"
       cfg.connectionPoolSize = 8
       btc = BitcoindTransport(cfg, NoOpBlockCache())
-      btc!!.update()
     }
     it("Seeds the BTC source account") {
-      ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount.address}?amount=0.01800000 | open -f -a preview").start()
-      log.info("Send 0.01800000 BTC from a funding account...")
-      val payment = MkPaymentUtil.awaitPayment(btc!!, seedAccount.address)[seedAccount.address]
-      MkPaymentUtil.awaitConfirmation(payment!!, btc!!)
+      ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount.address}?amount=0.01200000 | open -f -a preview").start()
+      log.info("Send 0.01200000 BTC from a funding account...")
+      seedPayment = MkPaymentUtil.awaitPayment(btc!!, seedAccount.address)[seedAccount.address]
+      MkPaymentUtil.awaitConfirmation(seedPayment!!, btc!!)
     }
     it("Splits the seed payment into 3 accounts and relays funds back to target return addresses") {
       assertNotNull(seedPayment)

@@ -1,9 +1,9 @@
 package io.vacco.mk.base.btc
 
-import java.util.LinkedHashSet
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
 import com.fasterxml.jackson.annotation.*
+import java.util.*
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("bits", "chainwork", "confirmations", "difficulty", "hash",
@@ -49,7 +49,7 @@ data class BtcBlock(
     val time: Long = 0,
 
     @JsonProperty("tx") @Valid
-    val tx: Set<String> = LinkedHashSet(),
+    val tx: MutableList<BtcTx> = ArrayList(),
     @JsonProperty("version")
     val version: Long = 0,
     @JsonProperty("versionHex")

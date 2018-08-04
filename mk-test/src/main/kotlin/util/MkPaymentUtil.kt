@@ -33,7 +33,7 @@ object MkPaymentUtil {
       log.info("Awaiting payment confirmation on $payment")
       Thread.sleep(10_000)
     }
-    log.info("Payment confirmed: ${payment}")
+    log.info("Payment confirmed: $payment")
     return payment
   }
 }
