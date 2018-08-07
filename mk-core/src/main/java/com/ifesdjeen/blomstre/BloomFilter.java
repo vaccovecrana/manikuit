@@ -48,9 +48,9 @@ public class BloomFilter<T> {
 
   private long[] getHashBuckets(ByteBuffer b, int hashCount, long max) {
     final long[] result = new long[hashCount];
-    b.clear();
+    b.rewind();
     final long xxH = LongHashFunction.xx().hashBytes(b);
-    b.clear();
+    b.rewind();
     final long m3 = LongHashFunction.murmur_3().hashBytes(b);
     final long [] hash = new long [] {xxH, m3};
     for (int i = 0; i < hashCount; ++i) {
@@ -74,7 +74,8 @@ public class BloomFilter<T> {
   }
 
   private boolean isPresent(ByteBuffer key) {
-    for (long bucketIndex : getHashBuckets(key)) {
+    long [] buckets = getHashBuckets(key);
+    for (long bucketIndex : buckets) {
       if (!bitset.get(bucketIndex)) {
         return false;
       }

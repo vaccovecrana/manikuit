@@ -15,7 +15,7 @@ public class MkHashing {
         .collect(Collectors.toList());
     ByteBuffer bb = ByteBuffer.allocateDirect(bytes.stream().mapToInt(ba -> ba.length).sum());
     bytes.forEach(bb::put);
-    bb.clear();
+    bb.rewind();
     long hash = LongHashFunction.xx(seed).hashBytes(bb);
     return asHex(longToBytes(hash));
   }

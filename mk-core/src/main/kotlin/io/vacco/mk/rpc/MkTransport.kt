@@ -16,7 +16,6 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     MkCachingTransport(config), Closeable {
 
   protected val accountDataSep = "::"
-
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
   private var txAddressFilter: BloomFilter<MkPaymentRecord>? = null
 
@@ -43,7 +42,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     require(config.blockCacheLimit > 0)
     require(config.blockScanLimit > 0)
     txAddressFilter = BloomFilter.makeFilter(MkAccountCodec::fingerPrintAddress,
-        config.txFilterCapacity, 0.001)
+        config.txFilterCapacity, config.txFilterMaxFalsePositiveProbability)
   }
 
   fun newBlock(blockDetail: MkBlockDetail) {

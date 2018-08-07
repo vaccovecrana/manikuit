@@ -105,7 +105,7 @@ class ParityTransportSpec {
       assertNotNull(keyData)
       log.info(keyData)
     }
-    it("Opens a new websocket Parity connection and processes incoming messages") {
+    it("Opens a new web socket Parity connection and processes incoming messages") {
       Thread.sleep(90_000)
       eth?.close()
     }
