@@ -38,12 +38,6 @@ class ParityTransportSpec {
       cfg.rootUrl = "http://127.0.0.1:8545"
       eth = ParityTransport(cfg, ethCache)
     }
-
-    it("Opens a new websocket Parity connection and processes incoming messages") {
-      Thread.sleep(90_000)
-      eth?.close()
-    }
-
     it("Can encode 0.05438066 ETH as base 16 wei.") {
       val ethAmt = BigDecimal("0.05438066").setScale(18)
       val wei16 = eth!!.encodeAmount(ethAmt)
@@ -110,6 +104,10 @@ class ParityTransportSpec {
       val keyData = MkAccountCodec.decode(payment)
       assertNotNull(keyData)
       log.info(keyData)
+    }
+    it("Opens a new websocket Parity connection and processes incoming messages") {
+      Thread.sleep(90_000)
+      eth?.close()
     }
   }
 }

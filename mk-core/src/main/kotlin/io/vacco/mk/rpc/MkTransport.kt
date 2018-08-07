@@ -53,7 +53,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
         blockCache.storeRecords(blockDetail.second)
         onNewBlock(blockDetail)
         blockDetail.second
-            .filter { txAddressFilter!!.isPresent(it) }
+            .filter { txAddressFilter!!.isPresent(it) }.map(this::hash)
             .forEach{
               log.warn("Address notification match: [${it.address}]")
               onAddressMatch(it)
@@ -74,10 +74,12 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   fun getBlockDetail(height: Long): MkBlockDetail {
     val bd = doGetBlockDetail(height)
-    return bd.copy(second = bd.second.map {
-      it.id = MkHashing.apply(it.type, it.address, it.amount, it.blockHeight, it.txId)
-      it
-    })
+    return bd.copy(second = bd.second.map(this::hash))
+  }
+
+  private fun hash(p: MkPaymentRecord): MkPaymentRecord {
+    p.id = MkHashing.apply(p.type, p.address, p.amount, p.blockHeight, p.txId)
+    return p
   }
 
   fun create(): MkAccount {
