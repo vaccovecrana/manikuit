@@ -1,6 +1,7 @@
 package io.vacco.mk.rpc
 
 import io.vacco.mk.config.HttpConfig
+import io.vacco.mk.util.HttpResponseException
 import okhttp3.*
 import org.slf4j.*
 import java.util.concurrent.ForkJoinPool
@@ -61,13 +62,13 @@ open class HttpTransport(config: HttpConfig) {
         if (log.isDebugEnabled) { log.debug("Response: [$json]") }
         return json
       }
-      val errorMsg = "[${response.code()}] -> ${response.message()}"
+      val exData = HttpResponseException(response.code(), response.message())
       if (log.isDebugEnabled) {
-        log.debug(errorMsg)
         val errorBody = response.body()
-        if (errorBody != null) { log.debug(errorBody.string()) }
+        if (errorBody != null) { exData.errorBody = errorBody.string() }
+        log.debug(exData.toString())
       }
-      throw IllegalStateException(errorMsg)
+      throw exData
     }
   }
 
