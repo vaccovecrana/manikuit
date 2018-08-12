@@ -35,13 +35,13 @@ open class HttpTransport(config: HttpConfig) {
     return processJson(Request.Builder().url(resolve(path, *params)).get().build())
   }
 
-  fun postJson(path: String?, jsonPayload: String, headers: Map<String, String>?): String {
+  fun postJson(path: String?, jsonPayload: String, headers: Map<String, String>?, vararg params: QueryParam): String {
     if (log.isDebugEnabled) {
       log.debug("RPC POST: [$jsonPayload]")
       if (headers != null) { log.debug("Headers: [$headers]") }
     }
     var builder = Request.Builder()
-        .url(resolve(path))
+        .url(resolve(path, *params))
         .post(RequestBody.create(MediaType.parse("application/json"), jsonPayload))
     if (headers != null && headers.isNotEmpty()) {
       builder = builder.headers(Headers.of(headers))
