@@ -46,21 +46,29 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   }
 
   fun newBlock(blockDetail: MkBlockDetail) {
-    try {
-      if (blockDetail.second.isNotEmpty()) {
+    if (blockDetail.second.isNotEmpty()) {
+      wrap({
         blockCache.storeBlock(blockDetail.first)
         blockCache.storeRecords(blockDetail.second)
-        onNewBlock(blockDetail)
-        blockDetail.second
-            .filter { txAddressFilter!!.isPresent(it) }.map(this::hash)
-            .forEach{
+      }, "Block cache storage error.")
+      wrap({ onNewBlock(blockDetail) }, "New block processing error. Verify listener implementation.")
+      blockDetail.second
+          .filter {
+            if (log.isDebugEnabled) { log.debug(it.toString()) }
+            txAddressFilter!!.isPresent(it)
+          }.map(this::hash)
+          .forEach{
+            wrap({
               log.warn("Address notification match: [${it.address}]")
               onAddressMatch(it)
-            }
-      }
-    } catch (e: Exception) {
-      log.error("Unable to complete new block notifications. Please verify storage/listener implementations.", e)
+            }, "Address notification processing error.")
+          }
     }
+  }
+
+  private fun wrap(action: () -> Unit, message: String) {
+    try { action() }
+    catch (e: Exception) { log.error(message, e) }
   }
 
   fun notifyOnAddress(pr: MkPaymentRecord) {

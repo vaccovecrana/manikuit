@@ -37,9 +37,9 @@ open class HttpTransport(config: HttpConfig) {
   }
 
   fun postJson(path: String?, jsonPayload: String, headers: Map<String, String>?, vararg params: QueryParam): String {
-    if (log.isDebugEnabled) {
-      log.debug("RPC POST: [$jsonPayload]")
-      if (headers != null) { log.debug("Headers: [$headers]") }
+    if (log.isTraceEnabled) {
+      log.trace("RPC POST: [$jsonPayload]")
+      if (headers != null) { log.trace("Headers: [$headers]") }
     }
     var builder = Request.Builder()
         .url(resolve(path, *params))
@@ -59,14 +59,14 @@ open class HttpTransport(config: HttpConfig) {
     client.newCall(r0).execute().use { response ->
       if (response.isSuccessful) {
         val json = response.body()!!.string()
-        if (log.isDebugEnabled) { log.debug("Response: [$json]") }
+        if (log.isTraceEnabled) { log.trace("Response: [$json]") }
         return json
       }
       val exData = HttpResponseException(response.code(), response.message())
-      if (log.isDebugEnabled) {
+      if (log.isTraceEnabled) {
         val errorBody = response.body()
         if (errorBody != null) { exData.errorBody = errorBody.string() }
-        log.debug(exData.toString())
+        log.trace(exData.toString())
       }
       throw exData
     }
