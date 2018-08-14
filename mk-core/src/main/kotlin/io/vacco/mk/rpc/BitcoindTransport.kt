@@ -167,18 +167,20 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
       .setScale(getCoinPrecision()).multiply(satoshiFactor).toBigInteger()
 
   private fun onZmqMessage(msg: ZMsg) {
-    if (log.isTraceEnabled) { log.trace("Zmq frame: [$msg]") }
-    if (msg.size == 3) {
-      val topic = msg.popString()
-      when (topic) {
-        hashBlock -> {
-          if (log.isDebugEnabled) { log.debug("Zmq BTC block frame: [$msg]") }
-          val btcBlock = getBtcBlock(msg.popString())
-          val blockDetail = convert(btcBlock)
-          newBlock(blockDetail)
+    wrap({
+      if (log.isTraceEnabled) { log.trace("Zmq frame: [$msg]") }
+      if (msg.size == 3) {
+        val topic = msg.popString()
+        when (topic) {
+          hashBlock -> {
+            if (log.isDebugEnabled) { log.debug("Zmq BTC block frame: [$msg]") }
+            val btcBlock = getBtcBlock(msg.popString())
+            val blockDetail = convert(btcBlock)
+            newBlock(blockDetail)
+          }
         }
       }
-    }
+    }, "Zmq message processing error.")
   }
 
   private fun isMultiSig(address: String) = address.startsWith("2") || address.startsWith("3")

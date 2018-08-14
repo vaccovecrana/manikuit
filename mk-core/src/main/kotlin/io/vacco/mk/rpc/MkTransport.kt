@@ -67,7 +67,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
     }
   }
 
-  private fun wrap(action: () -> Unit, message: String) {
+  protected fun wrap(action: () -> Unit, message: String) {
     try { action() }
     catch (e: Exception) { log.error(message, e) }
   }

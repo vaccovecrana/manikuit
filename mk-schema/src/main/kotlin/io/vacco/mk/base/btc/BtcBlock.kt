@@ -5,6 +5,7 @@ import javax.validation.constraints.NotNull
 import com.fasterxml.jackson.annotation.*
 import java.util.*
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("bits", "chainwork", "confirmations", "difficulty", "hash",
     "height", "mediantime", "merkleroot", "nonce", "previousblockhash", "nextblockhash",
@@ -56,4 +57,7 @@ data class BtcBlock(
     val versionHex: String = "",
     @JsonProperty("weight")
     val weight: Long = 0
-)
+) {
+    override fun toString(): String =
+        "BtcBlock[$height, $hash, $size, $time]"
+}

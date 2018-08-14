@@ -1,9 +1,11 @@
 package unit
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.vacco.mk.base.MkAccount
 import io.vacco.mk.base.MkPaymentDetail
 import io.vacco.mk.base.MkPaymentRecord
 import io.vacco.mk.base.MkPaymentTarget
+import io.vacco.mk.base.btc.BtcBlock
 import io.vacco.mk.rpc.BitcoindTransport
 import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
@@ -16,6 +18,8 @@ import org.junit.Assert.*
 import org.slf4j.*
 import util.InMemoryBlockCache
 import java.math.*
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 @DefinedOrder
@@ -51,7 +55,12 @@ class BitcoindTransportSpec {
       val btcSato = btc!!.encodeAmount(usdInBtc)
       assertEquals("0.00330000", btcSato)
     }
-
+    it("Can parse a BTC main net json block") {
+      val myString = String(Files.readAllBytes(Paths.get(
+          javaClass.classLoader.getResource("btcblock.json")!!.toURI())))
+      val block = ObjectMapper().readValue(myString, BtcBlock::class.java)
+      log.info(block.toString())
+    }
     it("Can create a new payment, along with a backing account.") {
       val payment = btc!!.create()
       assertNotNull(payment)
