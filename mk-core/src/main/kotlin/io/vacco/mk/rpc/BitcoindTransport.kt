@@ -172,6 +172,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
       val topic = msg.popString()
       when (topic) {
         hashBlock -> {
+          if (log.isDebugEnabled) { log.debug("Zmq BTC block frame: [$msg]") }
           val btcBlock = getBtcBlock(msg.popString())
           val blockDetail = convert(btcBlock)
           newBlock(blockDetail)

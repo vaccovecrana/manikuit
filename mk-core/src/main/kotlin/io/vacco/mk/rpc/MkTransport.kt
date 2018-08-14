@@ -46,6 +46,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   }
 
   fun newBlock(blockDetail: MkBlockDetail) {
+    if (log.isDebugEnabled) { log.debug("New [${blockDetail.first.type}] block with [${blockDetail.second.size}] transactions.") }
     if (blockDetail.second.isNotEmpty()) {
       wrap({
         blockCache.storeBlock(blockDetail.first)
