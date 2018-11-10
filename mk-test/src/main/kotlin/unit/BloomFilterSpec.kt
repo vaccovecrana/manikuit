@@ -1,7 +1,6 @@
 package unit
 
 import com.ifesdjeen.blomstre.BloomFilter
-import io.vacco.mk.util.MkHashing
 import j8spec.J8Spec.*
 import j8spec.annotation.DefinedOrder
 import j8spec.junit.J8SpecRunner
@@ -23,19 +22,6 @@ class BloomFilterSpec {
       val hash = LongHashFunction.xx().hashChars(mbiapn)
       require(hash == 8223519531741484286)
       println(hash)
-    }
-    it("Can hash a series of values") {
-      val hash = MkHashing.apply(mbiapn, null, 8, 999, 2.2, "test")
-      require(hash.length == 16)
-      println(hash)
-    }
-    it("Checks that different hashed object sequences have different hashed values") {
-      val hash0 = MkHashing.apply(mbiapn, "lol")
-      val hash1 = MkHashing.apply(mbiapn, "84756")
-      val hash2 = MkHashing.apply(null, null, 9, 0)
-      require(hash0 != hash1)
-      require(hash1 != hash2)
-      require(hash0 != hash2)
     }
     it("Adds elements to the bloom filter") {
       bf.add(mbiapn)

@@ -10,12 +10,15 @@ import kotlin.collections.HashMap
 
 class InMemoryBlockCache : MkBlockCache {
 
-  val paymentById = HashMap<String, MkPaymentRecord>()
+  var fakeId = 0L
+  val paymentById = HashMap<Long, MkPaymentRecord>()
   val paymentByAddress = HashMap<String, MutableList<MkPaymentRecord>>()
   val blockByHeight = TreeMap<Long, MkBlock>()
 
   override fun storeRecords(records: List<MkPaymentRecord>) {
     records.forEach {
+      fakeId++
+      it.id = fakeId
       paymentById.put(it.id, it)
       var addrPy = paymentByAddress[it.address]
       if (addrPy == null) {

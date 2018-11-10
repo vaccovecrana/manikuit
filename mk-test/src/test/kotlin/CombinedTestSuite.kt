@@ -9,7 +9,7 @@ import unit.*
     MkSplitSpec::class,
     RpcTransportSpec::class,
     BitcoindTransportSpec::class,
-    BitcoindTransferSpec::class,
     ParityTransportSpec::class,
+    BitcoindTransferSpec::class,
     ParityTransferSpec::class
 ) class CombinedTestSuite

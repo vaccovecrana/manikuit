@@ -19,7 +19,7 @@ class NoOpBlockCacheSpec {
     it("Performs storage no-ops.") {
       cache.purge(9999, MkExchangeRate.Crypto.BTC)
       cache.storeBlock(MkBlock(
-          id = "lol", height = 999, timeUtcSec = 1523719651,
+          height = 999, timeUtcSec = 1523719651,
           hash = "0xlol", type = MkExchangeRate.Crypto.BTC
       ))
       cache.storeRecords(emptyList())

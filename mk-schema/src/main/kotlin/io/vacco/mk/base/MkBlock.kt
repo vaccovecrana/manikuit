@@ -6,11 +6,11 @@ import javax.validation.constraints.*
 
 @MtEntity
 data class MkBlock(
-    @MtId @MtAttribute(len = 16)
-    @Size(min = 16, max = 16)
+    @MtId @NotNull
     @JsonPropertyDescription("Internal 64-bit hash/id (block no + block hash + block type).")
-    var id: String = "",
+    var id: Long = -1,
 
+    @MtId(position = 1)
     @MtAttribute(nil = false)
     @DecimalMin("0")
     @JsonPropertyDescription("Block height.")
@@ -21,11 +21,13 @@ data class MkBlock(
     @JsonPropertyDescription("Block time in UNIX epoch seconds.")
     var timeUtcSec: Long = 0,
 
+    @MtId(position = 2)
     @MtAttribute(nil = false, len = 128)
     @Size(min = 32, max = 128)
     @JsonPropertyDescription("Implementation specific block hash.")
     var hash: String = "",
 
+    @MtId(position = 3)
     @MtIndex @MtAttribute(nil = false, len = 32)
     @JsonPropertyDescription("A crypto currency type.")
     var type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN

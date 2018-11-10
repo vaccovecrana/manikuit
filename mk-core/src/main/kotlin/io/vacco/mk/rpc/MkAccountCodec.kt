@@ -26,7 +26,7 @@ object MkAccountCodec {
     val key = GcmCrypto.generateKey(256)
     val encoded = GcmCrypto.encryptGcm(pData.toByteArray(), key)
     val b64Enc = Base64.getEncoder()
-    val account = MkAccount(type, address,
+    val account = MkAccount(-1, type, address,
         b64Enc.encodeToString(encoded.ciphertext),
         b64Enc.encodeToString(encoded.iv),
         b64Enc.encodeToString(key))

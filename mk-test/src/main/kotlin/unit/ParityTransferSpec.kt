@@ -30,9 +30,9 @@ class ParityTransferSpec {
       cipherText = "kF/rvbBpNaMhcqM+2Z/foAtz3TuUCUHBBBInobw74ySyY0nY0apwRBVgk+16NHKnzSirAHspQzxPY0ozEfr8TAp7ZCTQdzYKhBkKG0x+D0Q1XcU6FaVTMwoV2rove6eFXwX0jm+og9XuixA0oQmUAUp2aeMEyyj16vCp88azQUY6fGdxwO2F6OSPdfrJSVPhmLwlpUTqSdOKUPSPstTMowSj4QugucBMeOEk5Uj6wEnZkv21Nrh3rMqa0VTGKRvM+x0VRvjixj5Pwf7xoGHPY0xZsdVOwuaH+ITFo48HH0yPk5qpFWcyKT1HPM2ny+66rNv/IYb7yBGX14i59ZMzdI6USD2a6JocdJ11uVVx6ZoHRVy42Ivgmh/4CgpBgph+4Y5hjatvYhLTDn9UpFKmHZSeeklaK2yGaOS2qK5ofmEi1qechRbJ7ud48GS7oyTrEm3CZB2q0bByenGL8oOO3/QcIVpchv8cZDgFhEm2NhTQWoeEL5t8KAXKNH4xYDaN0UHVqhETjxOzdbpRbsxOraWVrLb1Qinrqx4sG4roXARvjnDpMin2+unfClnCr/oZTCpaIxc+jNkyoqClENx2FGTmva0aJqV4u+V2NmvsYySdWq/B8sT1mH4lbxh64UN5T5ZVrw+zjhsAxHUVGm1bipGNxXv5en9QoFITiWRGj37vhb7XYDAXk2/aquxyNNnTfyWRUoHv2RQiSd1rwDG5sbNeJVSYOmUK7DOiYB03sx5TJ2nOC7CiZH5oebewPA==",
       iv = "wlxna16Djvm9nwxb", gcmKey = "3GndrdKSZ6CxXjdfDwESm6Z756Z1jzKQMmlABv4+QJ4=")
 
-  private val returnAddress0 = "0x00c24aA7F016E9bc6468578191d627526A904749"
-  private val returnAddress1 = "0x00385a1513db50BaCFf3fA61e8a8637aba0b906e"
-  private val returnAddress2 = "0x0070c8053314086514d40d1CbB4B6345d5Ff0aD4"
+  private val returnAddress0 = "0x01430526CE1134ce54B1DDA1e6D76E4AC0DFc038"
+  private val returnAddress1 = "0x9Cd634d711b6D371e3646b2ec729cEbc61b742f6"
+  private val returnAddress2 = "0x8361Ea9AC77ee59d7C3Cb2a0790c7Fa9da40ff9a"
 
   private var seedPayment: MkPaymentRecord? = null
 

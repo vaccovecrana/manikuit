@@ -41,9 +41,9 @@ class BitcoindTransferSpec {
   private var targetAcct1: MkAccount? = null
   private var targetAcct2: MkAccount? = null
 
-  private val returnAddress0 = "mv5pkqqJ3hZwn3oNtaT39HU62w9jPpBGsu"
-  private val returnAddress1 = "mzYaFx63twKRRP2NARPYbp6tE3BRgny2gY"
-  private val returnAddress2 = "mxvUDjNvkLoSsdN1xrxjYdMMgcdE9XQtao"
+  private val returnAddress0 = "2NBwr4VLa4fFu4cmztoXZWVzKV3gnmdoyc7"
+  private val returnAddress1 = "2NArJYqWyFyFMjP3Ytx96HxBEN6fRwFnLKp"
+  private val returnAddress2 = "2Myys3UNkxZz4Xvtm7DkU6WdAMmtCZD1uh3"
 
   init {
     beforeAll {

@@ -6,12 +6,17 @@ import javax.validation.constraints.*
 
 @MtEntity
 open class MkAccount(
+
+    @MtId val id: Long = -1,
+
+    @MtId(position = 1)
     @MtAttribute(nil = false, len = 32)
     @JsonProperty("type")
     @JsonPropertyDescription("A crypto currency type.") @NotNull
     val type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN,
 
-    @MtId @MtAttribute(nil = false, len = 128)
+    @MtId(position = 2)
+    @MtAttribute(nil = false, len = 128)
     @JsonProperty("address")
     @JsonPropertyDescription("A type currency address.")
     @Size(min = 32, max = 128) @NotNull

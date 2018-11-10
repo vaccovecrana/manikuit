@@ -5,7 +5,6 @@ import io.vacco.mk.base.*
 import io.vacco.mk.base.btc.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.spi.MkBlockCache
-import io.vacco.mk.util.MkHashing
 import io.vacco.mk.util.MkSplit
 import kotlinx.coroutines.experimental.*
 import org.zeromq.*
@@ -49,7 +48,6 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   private fun convert(btcBlock: BtcBlock): MkBlockDetail {
     val mkBlock = MkBlock(
-        id = MkHashing.apply(MkExchangeRate.Crypto.BTC, btcBlock.height, btcBlock.hash),
         height = btcBlock.height, timeUtcSec = btcBlock.time, hash = btcBlock.hash,
         type = MkExchangeRate.Crypto.BTC)
     val tx = btcBlock.tx
@@ -77,7 +75,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     require(targets.isNotEmpty())
     requireNotNull(unitFee)
     val rawTx = createRawTx(source, targets)
-    val signedTx = signRawTx(source, rawTx)
+    val signedTx = signRawTxWithKey(source, rawTx)
     val txId = rpcRequest(String::class.java, "sendrawtransaction", signedTx.hex!!).second
     return targets.map { it.copy(txId = txId) }
   }
@@ -138,7 +136,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return decodeRawTransaction(txHex)
   }
 
-  private fun signRawTx(from: MkPaymentDetail, tx: BtcTx): BtcTx {
+  private fun signRawTxWithKey(from: MkPaymentDetail, tx: BtcTx): BtcTx {
     requireNotNull(tx)
     requireNotNull(tx.hex)
     requireNotNull(from)
@@ -150,8 +148,8 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     if (isMultiSig(from.account.address)) {
       txoParams.redeemScript = prvData[1]
     }
-    val result = rpcRequest(Map::class.java, "signrawtransaction", tx.hex!!,
-        arrayOf(txoParams), arrayOf(prvData[0])).second
+    val result = rpcRequest(Map::class.java, "signrawtransactionwithkey",
+        tx.hex!!, arrayOf(prvData[0]), arrayOf(txoParams)).second
     return decodeRawTransaction(result.get("hex") as String)
   }
 

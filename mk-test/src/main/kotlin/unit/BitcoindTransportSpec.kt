@@ -71,9 +71,12 @@ class BitcoindTransportSpec {
       assertNotNull(keyData)
       log.info(keyData)
     }
-    it("Can update the BTC cache.") { btc!!.update() }
-    it("Can skip a cache update if the local block cache is up to date.") { btc!!.update() }
-
+    it("Can update the BTC cache.") {
+      btc!!.update()
+    }
+    it("Can skip a cache update if the local block cache is up to date.") {
+      btc!!.update()
+    }
     it("Can find transactions recorded in the last 40 minutes.") {
       val utc40MinAgo = btc!!.nowUtcSecMinus(40, ChronoUnit.MINUTES)
       val tx = btcCache.paymentById.values.filter { it.timeUtcSec >= utc40MinAgo }

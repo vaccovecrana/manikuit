@@ -57,8 +57,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
           .filter {
             if (log.isDebugEnabled) { log.debug(it.toString()) }
             txAddressFilter!!.isPresent(it)
-          }.map(this::hash)
-          .forEach{
+          }.forEach{
             wrap({
               log.warn("Address notification match: [${it.address}]")
               onAddressMatch(it)
@@ -82,12 +81,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   fun getBlockDetail(height: Long): MkBlockDetail {
     val bd = doGetBlockDetail(height)
-    return bd.copy(second = bd.second.map(this::hash))
-  }
-
-  private fun hash(p: MkPaymentRecord): MkPaymentRecord {
-    p.id = MkHashing.apply(p.type, p.address, p.amount, p.blockHeight, p.txId)
-    return p
+    return bd.copy(second = bd.second)
   }
 
   fun create(): MkAccount {
