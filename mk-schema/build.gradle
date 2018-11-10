@@ -3,7 +3,7 @@ plugins { id "com.jfrog.bintray" version "1.8.4" }
 dependencies {
   compile "javax.validation:validation-api:${validationApi}"
   compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVer}"
-  compile "io.vacco.metolithe:mt-annotations:0.71"
+  compile "io.vacco.metolithe:mt-annotations:0.72"
 }
 
 // TODO remove this when https://github.com/bintray/gradle-bintray-plugin/issues/104 is resolved.

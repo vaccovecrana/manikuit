@@ -6,9 +6,8 @@ import io.vacco.mk.base.btc.*
 import io.vacco.mk.config.MkConfig
 import io.vacco.mk.spi.MkBlockCache
 import io.vacco.mk.util.MkSplit
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.*
 import org.zeromq.*
-import java.io.NotActiveException
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.DecimalFormat
@@ -23,7 +22,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
   private val df: ThreadLocal<DecimalFormat> = ThreadLocal.withInitial { DecimalFormat("#0.00000000") }
   private val ctx = ZContext()
   private val zmqClient = ctx.createSocket(ZMQ.SUB)
-  private var zmqHandler: Deferred<Unit>? = null
+  private var zmqHandler: Job? = null
 
   private val hashTx = "hashtx"
   private val hashBlock = "hashblock"
@@ -32,7 +31,9 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     zmqClient.connect(config.pubSubUrl)
     zmqClient.subscribe(hashBlock)
     zmqClient.subscribe(hashTx)
-    zmqHandler = async { while (true) { onZmqMessage(ZMsg.recvMsg(zmqClient)) } }
+    zmqHandler = GlobalScope.launch {
+      while (true) { onZmqMessage(ZMsg.recvMsg(zmqClient)) }
+    }
   }
 
   override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.BTC
@@ -89,7 +90,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   override fun decodeToUnit(rawAmount: String): BigInteger = toSatoshi(rawAmount)
 
-  override fun close() { zmqHandler?.cancel(NotActiveException("Transport is closing")) }
+  override fun close() { zmqHandler?.cancel() }
 
   private fun getNewAddress(): Pair<String, String> {
     val address = rpcRequest(String::class.java, "getnewaddress").second
