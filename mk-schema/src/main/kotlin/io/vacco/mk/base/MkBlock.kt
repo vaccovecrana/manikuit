@@ -10,7 +10,7 @@ data class MkBlock(
     @JsonPropertyDescription("Internal 64-bit hash/id (block no + block hash + block type).")
     var id: Long = -1,
 
-    @MtId(position = 1)
+    @MtIdGroup(number = 0, position = 0)
     @MtAttribute(nil = false)
     @DecimalMin("0")
     @JsonPropertyDescription("Block height.")
@@ -21,13 +21,13 @@ data class MkBlock(
     @JsonPropertyDescription("Block time in UNIX epoch seconds.")
     var timeUtcSec: Long = 0,
 
-    @MtId(position = 2)
+    @MtIdGroup(number = 0, position = 1)
     @MtAttribute(nil = false, len = 128)
     @Size(min = 32, max = 128)
     @JsonPropertyDescription("Implementation specific block hash.")
     var hash: String = "",
 
-    @MtId(position = 3)
+    @MtIdGroup(number = 0, position = 2)
     @MtIndex @MtAttribute(nil = false, len = 32)
     @JsonPropertyDescription("A crypto currency type.")
     var type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN

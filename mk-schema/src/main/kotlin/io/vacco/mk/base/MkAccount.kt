@@ -9,13 +9,13 @@ open class MkAccount(
 
     @MtId val id: Long = -1,
 
-    @MtId(position = 1)
+    @MtIdGroup(number = 0, position = 0)
     @MtAttribute(nil = false, len = 32)
     @JsonProperty("type")
     @JsonPropertyDescription("A crypto currency type.") @NotNull
     val type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN,
 
-    @MtId(position = 2)
+    @MtIdGroup(number = 0, position = 1)
     @MtAttribute(nil = false, len = 128)
     @JsonProperty("address")
     @JsonPropertyDescription("A type currency address.")
