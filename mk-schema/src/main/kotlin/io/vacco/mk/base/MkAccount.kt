@@ -15,6 +15,7 @@ open class MkAccount(
     @JsonPropertyDescription("A crypto currency type.") @NotNull
     val type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN,
 
+    @MtIndex
     @MtIdGroup(number = 0, position = 1)
     @MtAttribute(nil = false, len = 128)
     @JsonProperty("address")
