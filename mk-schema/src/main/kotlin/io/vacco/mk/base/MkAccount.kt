@@ -7,7 +7,7 @@ import javax.validation.constraints.*
 @MtEntity
 open class MkAccount(
 
-    @MtId val id: Long = -1,
+    @MtId val aid: Long = -1,
 
     @MtIdGroup(number = 0, position = 0)
     @MtAttribute(nil = false, len = 32)

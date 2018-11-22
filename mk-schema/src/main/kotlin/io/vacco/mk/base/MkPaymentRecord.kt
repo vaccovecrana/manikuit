@@ -8,7 +8,11 @@ import javax.validation.constraints.*
 open class MkPaymentRecord(
     @MtId
     @JsonPropertyDescription("Internal 64-bit record hash.")
-    var id: Long = -1,
+    var pid: Long = -1,
+
+    @MtIndex @MtAttribute
+    @JsonPropertyDescription("When referencing a known account, store its id here.")
+    var aid: Long = -1,
 
     @MtIdGroup(number = 0, position = 0)
     @MtAttribute(nil = false, len = 32) @get:NotNull @set:NotNull
