@@ -118,8 +118,8 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash, 2).second
 
-  private fun getTransaction(txId: String): BtcTx? = try {
-    rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1).second
+  private fun getTransaction(txId: String, blockHash: String): BtcTx? = try {
+    rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1, blockHash).second
   } catch (e: Exception) { null }
 
   private fun decodeRawTransaction(txHex: String): BtcTx {
@@ -128,8 +128,6 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
   }
 
   private fun createRawTx(from: MkPaymentDetail, to: Collection<MkPaymentTarget>): BtcTx {
-    requireNotNull(from)
-    requireNotNull(to)
     require(to.isNotEmpty())
     val btcVin = Vin(txid = from.record.txId, vout = from.record.outputIdx)
     val targets = to.map { (it.address to toBtc(it.amount).toString()) }.toTypedArray()
@@ -138,10 +136,9 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
   }
 
   private fun signRawTxWithKey(from: MkPaymentDetail, tx: BtcTx): BtcTx {
-    requireNotNull(tx)
     requireNotNull(tx.hex)
-    requireNotNull(from)
-    val prevTx = requireNotNull(getTransaction(from.record.txId))
+    val blockHash = getBlockDetail(from.record.blockHeight).first.hash
+    val prevTx = requireNotNull(getTransaction(from.record.txId, blockHash))
     val txo = requireNotNull(prevTx.vout.find { it.n == from.record.outputIdx })
     val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx,
         txo.scriptPubKey.hex, from.record.amount, null)

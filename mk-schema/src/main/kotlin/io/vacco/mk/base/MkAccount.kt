@@ -7,13 +7,13 @@ import javax.validation.constraints.*
 @MtEntity
 open class MkAccount(
 
-    @MtId val aid: Long = -1,
+    @MtId var aid: Long = -1,
 
     @MtIdGroup(number = 0, position = 0)
     @MtAttribute(nil = false, len = 32)
     @JsonProperty("type")
     @JsonPropertyDescription("A crypto currency type.") @NotNull
-    val type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN,
+    var type: MkExchangeRate.Crypto = MkExchangeRate.Crypto.UNKNOWN,
 
     @MtIndex
     @MtIdGroup(number = 0, position = 1)
@@ -21,23 +21,23 @@ open class MkAccount(
     @JsonProperty("address")
     @JsonPropertyDescription("A type currency address.")
     @Size(min = 32, max = 128) @NotNull
-    val address: String = "",
+    var address: String = "",
 
     @MtAttribute(nil = false, len = 2048)
     @JsonProperty("cipherText")
     @JsonPropertyDescription("AES GCM implementation specific encoded address private components (key data/passphrase, etc.).")
     @Size(min = 16, max = 2048)
-    val cipherText: String = "",
+    var cipherText: String = "",
 
     @MtAttribute(nil = false, len = 256)
     @JsonProperty("iv")
     @Size(max = 256)
-    val iv: String = "",
+    var iv: String = "",
 
     @MtAttribute(nil = false, len = 256)
     @JsonProperty("gcmKey")
     @Size(max = 256)
-    val gcmKey: String = ""
+    var gcmKey: String = ""
 ) {
     override fun toString(): String = "(${this.type}) ${this.address}"
 }

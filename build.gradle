@@ -39,4 +39,4 @@ subprojects {
   compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
 }
 
-task wrapper(type: Wrapper) { gradleVersion = '4.5' }
+wrapper { gradleVersion = "5.1.1" }

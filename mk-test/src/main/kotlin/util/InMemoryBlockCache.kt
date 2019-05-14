@@ -18,8 +18,8 @@ class InMemoryBlockCache : MkBlockCache {
   override fun storeRecords(records: List<MkPaymentRecord>) {
     records.forEach {
       fakeId++
-      it.id = fakeId
-      paymentById.put(it.id, it)
+      it.pid = fakeId
+      paymentById.put(it.pid, it)
       var addrPy = paymentByAddress[it.address]
       if (addrPy == null) {
         addrPy = ArrayList()
@@ -27,7 +27,7 @@ class InMemoryBlockCache : MkBlockCache {
       }
       addrPy.add(it)
     }
-    val rec = records.map { it.id to it }.toTypedArray()
+    val rec = records.map { it.pid to it }.toTypedArray()
     paymentById.putAll(mapOf(*rec))
   }
 
@@ -49,7 +49,7 @@ class InMemoryBlockCache : MkBlockCache {
         .filter { it.type === type }
         .filter { it.timeUtcSec <= cacheLimit }
     toRemove.forEach {
-      paymentById.remove(it.id)
+      paymentById.remove(it.pid)
       paymentByAddress.remove(it.address)
     }
   }
