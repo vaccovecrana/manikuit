@@ -91,8 +91,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   fun broadcast(payment: MkPaymentDetail, targets: Collection<MkPaymentTarget>,
                 txUnitFee: BigInteger, txFee: BigInteger): Collection<MkPaymentTarget> {
-    val splitTargets = MkSplit.apply(decodeToUnit(payment.record.amount),
-        txFee, getFeeSplitMode(), targets)
+    val splitTargets = MkSplit.apply(decodeToUnit(payment.record.amount), txFee, getFeeSplitMode(), targets)
     return doBroadcast(payment, splitTargets, txUnitFee)
   }
 
