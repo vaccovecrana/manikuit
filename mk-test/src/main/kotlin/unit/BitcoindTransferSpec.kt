@@ -56,8 +56,9 @@ class BitcoindTransferSpec {
       btc = BitcoindTransport(cfg, NoOpBlockCache())
     }
     it("Seeds the BTC source account") {
-      ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount.address}?amount=0.01200000 | open -f -a preview").start()
-      log.info("Send 0.01200000 BTC from a funding account...")
+      // macos command: "/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount.address}?amount=0.00500000 | open -f -a preview"
+      ProcessBuilder("/bin/bash", "-c", "qrencode -o - bitcoin:${seedAccount.address}?amount=0.00500000 | display").start()
+      log.info("Send 0.00500000 BTC from a funding account...")
       seedPayment = MkPaymentUtil.awaitPayment(btc!!, seedAccount.address)[seedAccount.address]
       MkPaymentUtil.awaitConfirmation(seedPayment!!, btc!!)
     }
