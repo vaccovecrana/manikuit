@@ -9,7 +9,7 @@ buildscript {
 subprojects {
 
   group 'io.vacco.manikuit'
-  version "1.6.4"
+  version "1.6.5"
 
   repositories { jcenter() }
   buildscript { repositories { jcenter() } }
@@ -37,6 +37,7 @@ subprojects {
   }
 
   compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
+  compileJava { targetCompatibility = "1.8" }
 }
 
 wrapper { gradleVersion = "5.1.1" }
