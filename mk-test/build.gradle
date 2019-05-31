@@ -1,4 +1,4 @@
-apply plugin: 'jacoco'
+apply plugin: "jacoco"
 
 dependencies {
   compile project(":mk-core")
@@ -13,4 +13,4 @@ jacocoTestReport {
   classDirectories =  files(project.parent.subprojects.sourceSets.main.output)
 }
 
-test { jacoco { includes = ['unit.*', 'io.vacco.*'] } }
+test { jacoco { includes = ["unit.*", "io.vacco.*"] } }

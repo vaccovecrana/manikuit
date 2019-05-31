@@ -8,22 +8,22 @@ dependencies {
 
 // TODO remove this when https://github.com/bintray/gradle-bintray-plugin/issues/104 is resolved.
 bintray {
-  user = System.getenv('BINTRAY_USER')
-  key = System.getenv('BINTRAY_KEY')
-  publications = ['mavenKotlin']
+  user = System.getenv("BINTRAY_USER")
+  key = System.getenv("BINTRAY_KEY")
+  publications = ["mavenKotlin"]
   pkg {
-    repo = 'io.vacco.manikuit'
+    repo = "io.vacco.manikuit"
     name = project.name
-    userOrg = 'vaccovecrana'
-    licenses = ['Apache-2.0']
-    websiteUrl = 'https://github.com/vaccovecrana/manikuit'
-    issueTrackerUrl = 'https://github.com/vaccovecrana/manikuit/issues'
-    vcsUrl = 'https://github.com/vaccovecrana/manikuit.git'
-    labels = ['cryptocurrency', 'bitcoin', 'ethereum', 'monero', 'rpc', 'payment-gateway']
+    userOrg = "vaccovecrana"
+    licenses = ["Apache-2.0"]
+    websiteUrl = "https://github.com/vaccovecrana/manikuit"
+    issueTrackerUrl = "https://github.com/vaccovecrana/manikuit/issues"
+    vcsUrl = "https://github.com/vaccovecrana/manikuit.git"
+    labels = ["cryptocurrency", "bitcoin", "ethereum", "monero", "rpc", "payment-gateway"]
     publicDownloadNumbers = true
     version {
       name = project.version
-      desc = 'Cryptocurrency based payment gateway.'
+      desc = "Cryptocurrency based payment gateway."
       gpg { sign = true }
     }
   }
