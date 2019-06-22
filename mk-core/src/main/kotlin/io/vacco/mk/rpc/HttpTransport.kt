@@ -33,28 +33,33 @@ open class HttpTransport(config: HttpConfig) {
   }
 
   fun getJson(path: String, vararg params: QueryParam): String {
-    return processJson(Request.Builder().url(resolve(path, *params)).get().build())
+    return processRequest(Request.Builder().url(resolve(path, *params)).get().build())
   }
 
   fun postJson(path: String?, jsonPayload: String, headers: Map<String, String>?, vararg params: QueryParam): String {
     if (log.isTraceEnabled) {
-      log.trace("RPC POST: [$jsonPayload]")
-      if (headers != null) { log.trace("Headers: [$headers]") }
+      log.trace("JSON RPC POST: [$jsonPayload]")
     }
-    var builder = Request.Builder()
-        .url(resolve(path, *params))
-        .post(RequestBody.create(MediaType.parse("application/json"), jsonPayload))
-    if (headers != null && headers.isNotEmpty()) {
-      builder = builder.headers(Headers.of(headers))
-    }
-    return processJson(builder.build())
+    val content = RequestBody.create(MediaType.parse("application/json"), jsonPayload)
+    return postRaw(path, content, headers, *params)
   }
 
   fun postJson(path: String?, jsonPayload: String): String = postJson(path, jsonPayload, null)
 
   fun postJson(jsonPayload: String): String = postJson(null, jsonPayload)
 
-  private fun processJson(r0: Request): String {
+  fun postRaw(path: String?, content: RequestBody, headers: Map<String, String>?, vararg params: QueryParam): String {
+    if (log.isTraceEnabled) {
+      if (headers != null) { log.trace("Headers: [$headers]") }
+    }
+    var builder = Request.Builder().url(resolve(path, *params)).post(content)
+    if (headers != null && headers.isNotEmpty()) {
+      builder = builder.headers(Headers.of(headers))
+    }
+    return processRequest(builder.build())
+  }
+
+  private fun processRequest(r0: Request): String {
     if (log.isTraceEnabled) { log.trace("Raw HTTP request: [$r0]") }
     client.newCall(r0).execute().use { response ->
       if (response.isSuccessful) {
