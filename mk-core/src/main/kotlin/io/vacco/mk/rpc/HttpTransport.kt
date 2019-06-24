@@ -32,9 +32,18 @@ open class HttpTransport(config: HttpConfig) {
     this.client = bld.build()
   }
 
-  fun getJson(path: String, vararg params: QueryParam): String {
-    return processRequest(Request.Builder().url(resolve(path, *params)).get().build())
+  fun getJson(path: String?, headers: Map<String, String>?, vararg params: QueryParam): String {
+    if (log.isTraceEnabled) {
+      if (headers != null) { log.trace("Headers: [$headers]") }
+    }
+    var builder = Request.Builder().url(resolve(path, *params)).get()
+    if (headers != null && headers.isNotEmpty()) {
+      builder = builder.headers(Headers.of(headers))
+    }
+    return processRequest(builder.build())
   }
+
+  fun getJson(path: String?, vararg params: QueryParam): String = getJson(path, null, *params)
 
   fun postJson(path: String?, jsonPayload: String, headers: Map<String, String>?, vararg params: QueryParam): String {
     if (log.isTraceEnabled) {
