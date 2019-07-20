@@ -8,7 +8,7 @@ import java.util.concurrent.ForkJoinPool
 
 typealias QueryParam = Pair<String, Any>
 
-open class HttpTransport(val config: HttpConfig) {
+open class HttpTransport(config: HttpConfig) {
 
   private val log: Logger = LoggerFactory.getLogger(this.javaClass)
   private val rootUrl = HttpUrl.parse(config.rootUrl)

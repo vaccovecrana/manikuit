@@ -2,7 +2,7 @@ package io.vacco.mk.rpc
 
 import io.vacco.mk.config.BitcoinFeesConfig
 
-class BitcoinFeesTransport(private val config: BitcoinFeesConfig): MkCachingTransport(config) {
+class BitcoinFeesTransport(val config: BitcoinFeesConfig): MkCachingTransport(config) {
 
   var fastestFee: Long = -1
   var halfHourFee: Long = -1
