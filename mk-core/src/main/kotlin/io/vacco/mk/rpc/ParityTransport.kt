@@ -9,30 +9,35 @@ import okhttp3.*
 import java.math.*
 import java.util.*
 
-class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(config, blockCache) {
+class ParityTransport(config: MkConfig, blockCache: MkBlockCache) :
+    MkTransport(config, blockCache) {
 
-  private var webSocket: WebSocket? = client.newWebSocket(Request.Builder().url(config.pubSubUrl).build(),
-      object : WebSocketListener() {
-        override fun onOpen(webSocket: WebSocket?, response: Response?) {
-          val msg = mapper.writeValueAsString(mapOf(
-              "id" to UUID.randomUUID(),
-              "jsonrpc" to "2.0",
-              "method" to "eth_subscribe",
-              "params" to arrayOf("newHeads")))
-          webSocket!!.send(msg)
+  private val wsListener = object: WebSocketListener() {
+    override fun onOpen(webSocket: WebSocket?, response: Response?) {
+      val msg = mapper.writeValueAsString(mapOf(
+          "id" to UUID.randomUUID(),
+          "jsonrpc" to "2.0",
+          "method" to "eth_subscribe",
+          "params" to arrayOf("newHeads")))
+      webSocket!!.send(msg)
+    }
+    override fun onMessage(webSocket: WebSocket?, text: String?) {
+      if (log.isTraceEnabled) { log.trace("Raw WS message: [$text]") }
+      val payload = mapper.readTree(text)
+      val blockHash = payload.path("params").path("result").path("hash").asText("")
+      if (blockHash != null && blockHash.isNotEmpty()) {
+        val rawBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByHash", blockHash, true).second
+        if (rawBlock.transactions.isNotEmpty()) {
+          newBlock(convert(rawBlock))
         }
-        override fun onMessage(webSocket: WebSocket?, text: String?) {
-          if (log.isTraceEnabled) { log.trace("Raw WS message: [$text]") }
-          val payload = mapper.readTree(text)
-          val blockHash = payload.path("params").path("result").path("hash").asText("")
-          if (blockHash != null && blockHash.isNotEmpty()) {
-            val rawBlock = rpcRequest(EthBlock::class.java, "eth_getBlockByHash", blockHash, true).second
-            if (rawBlock.transactions.isNotEmpty()) {
-              newBlock(convert(rawBlock))
-            }
-          }
-        }
-      })
+      }
+    }
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+      this@ParityTransport.webSocket = client.newWebSocket(Request.Builder().url(config.pubSubUrl).build(), this)
+    }
+  }
+
+  private var webSocket: WebSocket? = client.newWebSocket(Request.Builder().url(config.pubSubUrl).build(), wsListener)
 
   override fun getChainType(): MkExchangeRate.Crypto = MkExchangeRate.Crypto.ETH
   override fun getCoinPrecision(): Int = 18
@@ -62,9 +67,6 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
   }
 
   override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>, unitFee: BigInteger): Collection<MkPaymentTarget> {
-    requireNotNull(source)
-    requireNotNull(targets)
-    requireNotNull(unitFee)
     require(targets.isNotEmpty())
     if (!exists(source.account)) { import(source.account) }
     return targets.map { tg0 ->
@@ -113,7 +115,6 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(
   }
 
   private fun decodeEntries(account: MkAccount): Array<String> {
-    requireNotNull(account)
     val rawData = MkAccountCodec.decode(account)
     val accountData = rawData.split(accountDataSep)
     require(accountData.size == 2)

@@ -71,10 +71,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
 
   override fun doBroadcast(source: MkPaymentDetail, targets: Collection<MkPaymentTarget>,
                            unitFee: BigInteger): Collection<MkPaymentTarget> {
-    requireNotNull(source)
-    requireNotNull(targets)
     require(targets.isNotEmpty())
-    requireNotNull(unitFee)
     val rawTx = createRawTx(source, targets)
     val signedTx = signRawTxWithKey(source, rawTx)
     val txId = rpcRequest(String::class.java, "sendrawtransaction", signedTx.hex!!).second

@@ -8,11 +8,11 @@ import java.util.concurrent.ForkJoinPool
 
 typealias QueryParam = Pair<String, Any>
 
-open class HttpTransport(config: HttpConfig) {
+open class HttpTransport(val config: HttpConfig) {
 
   private val log: Logger = LoggerFactory.getLogger(this.javaClass)
   private val rootUrl = HttpUrl.parse(config.rootUrl)
-  protected var client: OkHttpClient
+  var client: OkHttpClient
 
   init {
     var bld = OkHttpClient.Builder().dispatcher(Dispatcher(ForkJoinPool.commonPool()))
@@ -30,6 +30,11 @@ open class HttpTransport(config: HttpConfig) {
     }
     if (config.ignoreSsl) { bld = bld.hostnameVerifier { _, _ -> true } }
     this.client = bld.build()
+  }
+
+  fun probeRoot(): Int {
+    val req = Request.Builder().url(resolve(null)).head()
+    return client.newCall(req.build()).execute().use { it.code() }
   }
 
   fun getJson(path: String?, headers: Map<String, String>?, vararg params: QueryParam): String {

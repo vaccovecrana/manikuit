@@ -9,7 +9,7 @@ buildscript {
 subprojects {
 
   group "io.vacco.manikuit"
-  version "1.6.8"
+  version "1.6.9"
 
   repositories { jcenter() }
   buildscript { repositories { jcenter() } }
