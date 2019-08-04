@@ -29,6 +29,7 @@ class ParityTransportSpec {
   private val tx40Min: MutableList<MkPaymentRecord> = ArrayList()
   private val tx40MinWithStatus:MutableList<Pair<MkPaymentRecord, MkPaymentRecord.Status>> = ArrayList()
   private var testAddress: String? = null
+  private var addrTx: List<MkPaymentRecord>? = null
 
   init {
     beforeAll {
@@ -69,7 +70,6 @@ class ParityTransportSpec {
       testAddress = tx40Min[0].address
       assertNotNull(testAddress)
     }
-
     it("Creates a synthetic new block event to track specific transaction notifications.") {
       val tx40ByAddr = tx40Min.groupBy { it.address }
       val addr = tx40ByAddr.keys.iterator().next()
@@ -85,10 +85,19 @@ class ParityTransportSpec {
       eth!!.newBlock(block)
       assert(blockTx.size <= txList.size)
     }
-
     it("Can get all transactions for a particular address.") {
-      val addrTx = eth!!.getPaymentsFor(testAddress!!)
-      assertTrue(addrTx.isNotEmpty())
+      addrTx = eth!!.getPaymentsFor(testAddress!!)
+      assertTrue(addrTx!!.isNotEmpty())
+    }
+    it("Retrieves the status of the first test address transaction.") {
+      val tx = addrTx!![0]
+      val stat = eth!!.getTransactionStatus(tx.txId, tx.blockHeight)
+      assertNotNull(stat)
+    }
+    it("Cannot retrieve the status of a non-existing transaction hash.") {
+      val stat = eth!!.getTransactionStatus("0xffffffffffffffff38c430c799d732cc15e5f0d11d968582fa74f7229ba8095d", 0)
+      assertNotNull(stat)
+      assertEquals(stat, MkPaymentRecord.Status.UNKNOWN)
     }
     it("Can compute a transaction fee.") {
       val tx = eth!!.getPaymentsFor(testAddress!!)[0]

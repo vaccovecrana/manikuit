@@ -83,6 +83,16 @@ class BitcoindTransportSpec {
       assertTrue(tx.isNotEmpty())
       tx40Min.addAll(tx)
     }
+    it("Retrieves the status of the first test address transaction.") {
+      val tx = tx40Min[0]
+      val stat = btc!!.getTransactionStatus(tx.txId, tx.blockHeight)
+      assertNotNull(stat)
+    }
+    it("Cannot retrieve the status of a non-existing transaction hash.") {
+      val stat = btc!!.getTransactionStatus("ffffffffffffffffda3b563e24a9ad56c24ffc10fdd5d348d99c6ca988496627", 888)
+      assertNotNull(stat)
+      assertEquals(stat, MkPaymentRecord.Status.UNKNOWN)
+    }
     it("Can map all transactions to their corresponding status, according to the latest block height.") {
       val blockNow = btc!!.getLatestBlockNumber()
       tx40MinWithStatus.addAll(tx40Min.map {

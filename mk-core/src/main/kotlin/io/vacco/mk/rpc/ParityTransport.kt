@@ -6,11 +6,11 @@ import io.vacco.mk.config.MkConfig
 import io.vacco.mk.spi.MkBlockCache
 import io.vacco.mk.util.MkSplit
 import okhttp3.*
+import java.lang.Exception
 import java.math.*
 import java.util.*
 
-class ParityTransport(config: MkConfig, blockCache: MkBlockCache) :
-    MkTransport(config, blockCache) {
+class ParityTransport(config: MkConfig, blockCache: MkBlockCache) : MkTransport(config, blockCache) {
 
   private val wsListener = object: WebSocketListener() {
     override fun onOpen(webSocket: WebSocket?, response: Response?) {
@@ -44,6 +44,11 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) :
   override fun getFeeSplitMode(): MkSplit.FeeMode = MkSplit.FeeMode.PER_TARGET
   override fun getUrl(payment: MkPaymentDetail): String = payment.account.address
   override fun getLatestBlockNumber(): Long = decodeLong(rpcRequest(String::class.java, "eth_blockNumber").second)
+
+  override fun getTransactionStatus(txHash: String, blockHeight: Long): MkPaymentRecord.Status {
+    val tx = getEthTransaction(txHash) ?: return MkPaymentRecord.Status.UNKNOWN
+    return getTxBlockStatus(getBlockDelta(decodeLong(tx.blockNumber!!), getLatestBlockNumber()))
+  }
 
   override fun doGetBlockDetail(height: Long): MkBlockDetail =
       convert(rpcRequest(EthBlock::class.java, "eth_getBlockByNumber",
@@ -120,6 +125,10 @@ class ParityTransport(config: MkConfig, blockCache: MkBlockCache) :
     require(accountData.size == 2)
     return accountData.toTypedArray()
   }
+
+  private fun getEthTransaction(txId: String): Transaction? = try {
+    rpcRequest(Transaction::class.java, "eth_getTransactionByHash", txId).second
+  } catch (e: Exception) { null }
 
   fun decodeLong(input: String): Long = java.lang.Long.decode(input)
   fun encodeLong(input: Long): String = "0x${java.lang.Long.toHexString(input)}"

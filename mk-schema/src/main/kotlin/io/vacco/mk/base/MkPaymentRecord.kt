@@ -53,7 +53,7 @@ open class MkPaymentRecord(
     var timeUtcSec: Long = 0
 
 ) {
-    enum class Status { PENDING, PROCESSING, COMPLETE }
+    enum class Status { PENDING, PROCESSING, COMPLETE, UNKNOWN }
     override fun toString(): String =
         "(${this.type}) [${this.address}, ${this.amount}, ${this.blockHeight}]"
 }

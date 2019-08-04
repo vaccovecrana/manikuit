@@ -42,10 +42,12 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
   override fun getUrl(payment: MkPaymentDetail): String = "bitcoin:${payment.account.address}?amount=${payment.record.amount}"
   override fun getLatestBlockNumber(): Long = rpcRequest(Long::class.java, "getblockcount").second
 
-  override fun doGetBlockDetail(height: Long): MkBlockDetail {
-    val btcBlockHash = rpcRequest(String::class.java, "getblockhash", height).second
-    return convert(getBtcBlock(btcBlockHash))
+  override fun getTransactionStatus(txHash: String, blockHeight: Long): MkPaymentRecord.Status {
+    val tx = getRawTransaction(txHash, getBlockHash(blockHeight)) ?: return MkPaymentRecord.Status.UNKNOWN
+    return getTxBlockStatus(tx.confirmations!!)
   }
+
+  override fun doGetBlockDetail(height: Long): MkBlockDetail = convert(getBtcBlock(getBlockHash(height)))
 
   private fun convert(btcBlock: BtcBlock): MkBlockDetail {
     val mkBlock = MkBlock(
@@ -113,9 +115,10 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
     return null
   }
 
+  private fun getBlockHash(height: Long): String = rpcRequest(String::class.java, "getblockhash", height).second
   private fun getBtcBlock(hash: String): BtcBlock = rpcRequest(BtcBlock::class.java, "getblock", hash, 2).second
 
-  private fun getTransaction(txId: String, blockHash: String): BtcTx? = try {
+  private fun getRawTransaction(txId: String, blockHash: String): BtcTx? = try {
     rpcRequest(BtcTx::class.java, "getrawtransaction", txId, 1, blockHash).second
   } catch (e: Exception) { null }
 
@@ -135,7 +138,7 @@ class BitcoindTransport(config: MkConfig, blockCache: MkBlockCache): MkTransport
   private fun signRawTxWithKey(from: MkPaymentDetail, tx: BtcTx): BtcTx {
     requireNotNull(tx.hex)
     val blockHash = getBlockDetail(from.record.blockHeight).first.hash
-    val prevTx = requireNotNull(getTransaction(from.record.txId, blockHash))
+    val prevTx = requireNotNull(getRawTransaction(from.record.txId, blockHash))
     val txo = requireNotNull(prevTx.vout.find { it.n == from.record.outputIdx })
     val txoParams = BtcTxoParams(from.record.txId, from.record.outputIdx,
         txo.scriptPubKey.hex, from.record.amount, null)

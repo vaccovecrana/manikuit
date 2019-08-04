@@ -7,8 +7,7 @@ import io.vacco.mk.spi.MkBlockCache
 import io.vacco.mk.util.*
 import org.slf4j.*
 import java.io.Closeable
-import java.math.BigDecimal
-import java.math.BigInteger
+import java.math.*
 import java.time.*
 import java.time.temporal.ChronoUnit
 
@@ -34,6 +33,7 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   abstract fun getFeeSplitMode(): MkSplit.FeeMode
 
   abstract fun getUrl(payment: MkPaymentDetail): String
+  abstract fun getTransactionStatus(txHash: String, blockHeight: Long): MkPaymentRecord.Status
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
   var onAddressMatch: (payment: MkPaymentRecord) -> Unit = {}
@@ -46,7 +46,9 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   }
 
   fun newBlock(blockDetail: MkBlockDetail) {
-    if (log.isDebugEnabled) { log.debug("New [${blockDetail.first.type}] block with [${blockDetail.second.size}] transactions.") }
+    if (log.isDebugEnabled) {
+      log.debug("New [${blockDetail.first.type}] block with [${blockDetail.second.size}] transactions.")
+    }
     if (blockDetail.second.isNotEmpty()) {
       wrap({
         blockCache.storeBlock(blockDetail.first)
@@ -119,16 +121,18 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   fun getPaymentsFor(address: String): List<MkPaymentRecord> =
       blockCache.getPaymentsFor(address, getChainType())
 
-  fun getStatus(payment: MkPaymentRecord, currentBlockHeight: Long): MkPaymentRecord.Status {
-    val delta = getBlockDelta(payment, currentBlockHeight)
-    if (delta >= config.confirmationThreshold) return MkPaymentRecord.Status.COMPLETE
-    if (delta > 0 && delta < config.confirmationThreshold) return MkPaymentRecord.Status.PROCESSING
+  fun getStatus(payment: MkPaymentRecord, currentBlockHeight: Long): MkPaymentRecord.Status =
+      getTxBlockStatus(getBlockDelta(payment.blockHeight, currentBlockHeight))
+
+  fun getTxBlockStatus(blockDelta: Long): MkPaymentRecord.Status {
+    if (blockDelta >= config.confirmationThreshold) return MkPaymentRecord.Status.COMPLETE
+    if (blockDelta > 0 && blockDelta < config.confirmationThreshold) return MkPaymentRecord.Status.PROCESSING
     return MkPaymentRecord.Status.PENDING
   }
 
-  fun getBlockDelta(payment: MkPaymentRecord, currentBlockHeight: Long): Long {
-    return currentBlockHeight - (payment.blockHeight - 1)
-  }
+  fun getBlockDelta(txBlockHeight: Long, currentBlockHeight: Long): Long = currentBlockHeight - (txBlockHeight - 1)
+  fun getBlockDelta(payment: MkPaymentRecord, currentBlockHeight: Long): Long =
+      getBlockDelta(payment.blockHeight, currentBlockHeight)
 
   private fun blockScanCutOffSec(): Long = nowUtcSecMinus(config.blockScanLimit, config.blockScanLimitUnit)
   private fun blockCacheCutOffSec(): Long =
