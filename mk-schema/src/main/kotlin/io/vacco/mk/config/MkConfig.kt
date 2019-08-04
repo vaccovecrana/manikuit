@@ -24,9 +24,15 @@ open class MkConfig(
     var blockCacheLimitUnit: TimeUnit = TimeUnit.NANOSECONDS,
     @JsonPropertyDescription("Pub/sub URI to receive implementation specific notifications from the processing daemon.")
     var pubSubUrl: String = "",
-    @JsonPropertyDescription("Bloom filter transaction listener capacity (currently supports per-address listener filters).")
+    @JsonPropertyDescription("Bloom filter address listener capacity (currently supports per-address listener filters).")
     @DecimalMin(value = "512")
-    var txFilterCapacity: Int = 10_000_000,
+    var addrFilterCapacity: Int = 10_000_000,
+    @JsonPropertyDescription("Bloom filter address listener max false positive probability.")
+    @DecimalMin(value = "0.0")
+    var addrFilterMaxFalsePositiveProbability: Double = 0.001,
+    @JsonPropertyDescription("Bloom filter transaction listener capacity (currently supports per-transaction listener filters).")
+    @DecimalMin(value = "512")
+    var txFilterCapacity: Int = 50_000_000,
     @JsonPropertyDescription("Bloom filter transaction listener max false positive probability.")
     @DecimalMin(value = "0.0")
     var txFilterMaxFalsePositiveProbability: Double = 0.001

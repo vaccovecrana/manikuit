@@ -21,8 +21,6 @@ object MkAccountCodec {
   }
 
   fun encodeRaw(address: String, pData: String, type: MkExchangeRate.Crypto): MkAccount {
-    requireNotNull(address)
-    requireNotNull(pData)
     val key = GcmCrypto.generateKey(256)
     val encoded = GcmCrypto.encryptGcm(pData.toByteArray(), key)
     val b64Enc = Base64.getEncoder()
@@ -36,7 +34,16 @@ object MkAccountCodec {
 
   fun fingerPrintAddress(pr: MkPaymentRecord): ByteBuffer {
     val data = StringBuilder().append(pr.type).append(pr.address.toLowerCase()).toString()
-    val bytes = data.toByteArray()
+    return fingerPrint(data)
+  }
+
+  fun fingerPrintTransactionHash(pr: MkPaymentRecord): ByteBuffer {
+    val data = StringBuilder().append(pr.type).append(pr.txId.toLowerCase()).toString()
+    return fingerPrint(data)
+  }
+
+  private fun fingerPrint(payload: String): ByteBuffer {
+    val bytes = payload.toByteArray()
     val bb = ByteBuffer.allocateDirect(bytes.size)
     bb.put(bytes)
     bb.rewind()

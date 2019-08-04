@@ -16,7 +16,8 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   protected val accountDataSep = "::"
   protected val log: Logger = LoggerFactory.getLogger(javaClass)
-  private var txAddressFilter: BloomFilter<MkPaymentRecord>? = null
+  private var addressFilter: BloomFilter<MkPaymentRecord>? = null
+  private var txFilter: BloomFilter<MkPaymentRecord>? = null
 
   abstract fun computeFee(from: MkPaymentDetail, to: Collection<MkPaymentTarget>, txUnitFee: BigInteger): BigInteger
   abstract fun encodeAmount(amount: BigDecimal): String
@@ -37,11 +38,14 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
 
   var onNewBlock: (block: MkBlockDetail) -> Unit = {}
   var onAddressMatch: (payment: MkPaymentRecord) -> Unit = {}
+  var onTransactionMatch: (payment: MkPaymentRecord) -> Unit = {}
 
   init {
     require(config.blockCacheLimit > 0)
     require(config.blockScanLimit > 0)
-    txAddressFilter = BloomFilter.makeFilter(MkAccountCodec::fingerPrintAddress,
+    addressFilter = BloomFilter.makeFilter(MkAccountCodec::fingerPrintAddress,
+        config.addrFilterCapacity, config.addrFilterMaxFalsePositiveProbability)
+    txFilter = BloomFilter.makeFilter(MkAccountCodec::fingerPrintTransactionHash,
         config.txFilterCapacity, config.txFilterMaxFalsePositiveProbability)
   }
 
@@ -58,12 +62,18 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
       blockDetail.second
           .filter {
             if (log.isDebugEnabled) { log.debug(it.toString()) }
-            txAddressFilter!!.isPresent(it)
+            addressFilter!!.isPresent(it) || txFilter!!.isPresent(it)
           }.forEach{
             wrap({
-              log.warn("Address notification match: [${it.address}]")
-              onAddressMatch(it)
-            }, "Address notification processing error.")
+              if (addressFilter!!.isPresent(it)) {
+                log.warn("Address notification match: [${it.address}]")
+                onAddressMatch(it)
+              }
+              if (txFilter!!.isPresent(it)) {
+                log.warn("Transaction notification match: [${it.txId}]")
+                onTransactionMatch(it)
+              }
+            }, "Bloom filter notification processing error.")
           }
     }
   }
@@ -76,9 +86,15 @@ abstract class MkTransport(val config: MkConfig, private val blockCache: MkBlock
   fun notifyOnAddress(pr: MkPaymentRecord) {
     requireNotNull(pr.type)
     requireNotNull(pr.address)
-    require(pr.type === getChainType())
+    require(pr.type == getChainType())
     log.warn("Address notification watch: [${pr.address}]")
-    txAddressFilter!!.add(pr)
+    addressFilter!!.add(pr)
+  }
+
+  fun notifyOnTransaction(type: MkExchangeRate.Crypto, txId: String) {
+    require(type == getChainType())
+    log.warn("Transaction notification watch: [$txId]")
+    txFilter!!.add(MkPaymentRecord(type = type, txId = txId))
   }
 
   fun getBlockDetail(height: Long): MkBlockDetail {
